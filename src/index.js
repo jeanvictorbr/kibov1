@@ -11,8 +11,14 @@ const client = new Client({
     ],
     partials: [Partials.Channel, Partials.Message],
     sweepers: {
-        messages: { interval: 3600, lifetime: 1800 },
-        users: { interval: 3600, lifetime: 1800 }
+        messages: { 
+            interval: 3600, 
+            lifetime: 1800 
+        },
+        users: { 
+            interval: 3600,
+            filter: () => user => user.bot // Remove bots do cache para poupar RAM
+        }
     }
 });
 
