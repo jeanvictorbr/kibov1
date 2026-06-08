@@ -1,6 +1,7 @@
 {
   "name": "kibo",
   "version": "1.0.0",
+  "description": "Bot Kibo",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
