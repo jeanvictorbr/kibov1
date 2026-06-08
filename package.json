@@ -10,7 +10,7 @@
   "dependencies": {
     "@prisma/client": "^5.10.0",
     "axios": "^1.6.0",
-    "canvas": "npm:canvas-prebuilt@*",
+    "canvas": "^2.11.2",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.0",
     "gifencoder": "^2.0.1"
