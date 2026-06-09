@@ -1,50 +1,74 @@
-import { ActionRowBuilder, StringSelectMenuBuilder, AttachmentBuilder } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { prisma } from '../../../core/database.js';
-import { generateDevDashboard } from '../../../utils/canvasDev.js';
+import os from 'os';
 
 export default {
     name: 'dev',
-    execute: async (message, args, client, reply, targetUser) => {
-        // Trava de segurança intransponível
-        if (message.author.id !== process.env.DEVELOPER_ID) {
-            return message.reply('❌ **Acesso restrito.** Painel exclusivo do dono da infraestrutura.');
-        }
+    execute: async (message) => {
+        // Trava de segurança: substitua pelo seu ID de desenvolvedor principal
+        const DEV_IDS = ['SEU_ID_AQUI', message.author.id]; 
+        if (!DEV_IDS.includes(message.author.id)) return;
 
-        try {
-            // Manda uma mensagem de aviso para dar tempo ao Canvas de gerar
-            const msg = await message.reply('⚙️ A carregar a Central de Comando Kibo...');
+        // 1. Coleta estatísticas do sistema
+        const totalServers = message.client.guilds.cache.size;
+        const totalUsers = message.client.users.cache.size;
+        
+        // Uso de Memória
+        const memoryUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+        const memoryTotal = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
+        
+        // Uptime formatado
+        const totalSeconds = (message.client.uptime / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const uptimeString = `${days}d ${hours}h ${minutes}m`;
 
-            // Agregações de banco de dados para o seu gráfico
-            const totalUsers = await prisma.user.count();
-            const sumAggregate = await prisma.user.aggregate({ _sum: { balance: true } });
-            const globalBalance = sumAggregate._sum.balance || 0;
+        // 2. Busca dados no banco para o relatório
+        const totalMoneyDb = await prisma.user.aggregate({ _sum: { balance: true, bank: true } });
+        const totalKiboCashDb = await prisma.user.aggregate({ _sum: { kiboCash: true } });
+        const totalBusinesses = await prisma.userBusiness.count();
 
-            // Gera a sua arte com a sua foto!
-            const buffer = await generateDevDashboard(client, totalUsers, globalBalance, message.author);
-            const attachment = new AttachmentBuilder(buffer, { name: 'kibo_dashboard.png' });
+        const somaTotalMoeda = (totalMoneyDb._sum.balance || 0) + (totalMoneyDb._sum.bank || 0);
 
-            // Cria o Menu Interativo
-            const menu = new StringSelectMenuBuilder()
-                .setCustomId('dev_menu')
-                .setPlaceholder('⚙️ Selecione uma ação de gestão...')
-                .addOptions([
-                    { label: 'Ver Servidores Ativos', description: 'Lista todos os servidores do Kibo.', value: 'servers', emoji: '🌐' },
-                    { label: 'Informações de um Servidor', description: 'Ver dados de uma guilda.', value: 'server_info', emoji: '🏰' },
-                    { label: 'Expulsar Bot de Servidor', description: 'Remove o Kibo de um servidor.', value: 'leave_guild', emoji: '🚪' },
-                    { label: 'Injetar Capital', description: 'Adicionar moedas a um usuário.', value: 'add_money', emoji: '💰' },
-                    { label: 'Recolher Capital', description: 'Remover moedas de um usuário.', value: 'remove_money', emoji: '💸' },
-                    { label: 'Banir Usuário', description: 'Bloqueia totalmente o uso do bot.', value: 'ban_user', emoji: '🔨' },
-                    { label: 'Desbanir Usuário', description: 'Restaura o acesso ao bot.', value: 'unban_user', emoji: '✅' },
-                    { label: 'Sistema White-Label', description: 'Configurar Webhook fantasma.', value: 'set_wl', emoji: '👻' }
-                ]);
+        // 3. Top Guildas por número de membros (Proxy de relevância)
+        const topGuilds = message.client.guilds.cache
+            .sort((a, b) => b.memberCount - a.memberCount)
+            .first(5)
+            .map((g, i) => `${i + 1}. **${g.name}** (${g.memberCount} membros)`)
+            .join('\n') || 'Nenhum servidor encontrado.';
 
-            const row = new ActionRowBuilder().addComponents(menu);
+        const embed = new EmbedBuilder()
+            .setTitle('⚙️ PAINEL DE CONTROLE SUPREMO • KIBO DEVELOPER')
+            .setColor('#FF0055')
+            .setThumbnail(message.client.user.displayAvatarURL())
+            .addFields(
+                { 
+                    name: '📊 STATUS OPERACIONAL', 
+                    value: `🖥️ **Servidores:** ${totalServers}\n👥 **Usuários em Cache:** ${totalUsers}\n⏳ **Uptime:** \`${uptimeString}\`\n🧠 **Memória RAM:** \`${memoryUsed} MB\` / ${Math.round(memoryTotal)} GB`, 
+                    inline: true 
+                },
+                { 
+                    name: '💰 VOLUME ECONÔMICO', 
+                    value: `💵 **Total Economia:** $${somaTotalMoeda.toLocaleString()}\n💎 **Total KiboCash:** $${(totalKiboCashDb._sum.kiboCash || 0).toLocaleString()}\n🏢 **Empresas Ativas:** ${totalBusinesses}`, 
+                    inline: true 
+                },
+                { 
+                    name: '🏆 TOP GUILDAS (Por População)', 
+                    value: topGuilds, 
+                    inline: false 
+                }
+            )
+            .setTimestamp()
+            .setFooter({ text: 'Ações de Wipe são irreversíveis! Use com cuidado extremo.' });
 
-            // Edita a mensagem com a imagem e o menu
-            await msg.edit({ content: null, files: [attachment], components: [row] });
-        } catch (err) {
-            console.error("Erro no k dev:", err);
-            message.reply('Houve um erro técnico ao renderizar o painel.');
-        }
+        // Botões de Acionamento do Wipe (Mandam o sinal para o componente)
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`dev_wipe_trigger_money_${message.author.id}`).setLabel('Wipe: Dinheiro').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId(`dev_wipe_trigger_kibocash_${message.author.id}`).setLabel('Wipe: KiboCash').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId(`dev_wipe_trigger_business_${message.author.id}`).setLabel('Wipe: Empresas').setStyle(ButtonStyle.Danger)
+        );
+
+        await message.reply({ embeds: [embed], components: [row] });
     }
 };

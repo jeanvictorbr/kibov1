@@ -36,7 +36,7 @@ export default {
                 },
                 { 
                     name: '🎭 INTERAÇÃO SOCIAL', 
-                    value: '`k abracar @user` - Dê um abraço apertado.\n`k beijar @user` - Roube um beijo.\n`k socar @user` - Dê um direto na cara.\n`k chutar @user` - Um bico ninja.\n`k morder @user` - Mordida feroz.\n`k dancar @user` - Passinho sincronizado.', 
+                    value: '`k abracar @user` - Dê um abraço apertado.\n`k bio` - Altere a msg do seu perfil.\n`k beijar @user` - Roube um beijo.\n`k socar @user` - Dê um direto na cara.\n`k chutar @user` - Um bico ninja.\n`k morder @user` - Mordida feroz.\n`k dancar @user` - Passinho sincronizado.', 
                     inline: false 
                 }
             )
