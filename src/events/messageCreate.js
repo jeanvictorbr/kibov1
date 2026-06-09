@@ -10,9 +10,11 @@ export default {
         if (message.author.bot) return;
 
         const content = message.content.trim();
+        
+        // Esta Regex aceita "ksocar" ou "k socar" (o \s* torna o espaço opcional)
         const prefixRegex = /^k\s*([a-zA-Z]+)(.*)/i; 
         const match = content.match(prefixRegex);
-        const prefixRegex = /^k([a-zA-Z]+)(.*)/i;
+        
         if (!match) return; 
 
         const commandName = match[1].toLowerCase();
