@@ -1,68 +1,75 @@
-import { createCanvas } from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
 
-// Configuração dos Símbolos, Cores e Multiplicadores
+// Mapeamento dos Emotes Padrão (Twemoji HD) e seus multiplicadores
+// Carregamos as imagens via URL para garantir que apareçam coloridas no Linux
 export const SLOTS = {
-    'CEREJA': { color: '#FF0055', mult: 2 },
-    'LIMÃO':  { color: '#FFD700', mult: 3 },
-    'UVA':    { color: '#9933CC', mult: 5 },
-    'SINO':   { color: '#FFaa00', mult: 10 },
-    'DIMA':   { color: '#00FFFF', mult: 20 },
-    'TIGRE':  { color: '#FF6600', mult: 50 }
+    'tiger':   { emoji: '🐯', url: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f42f.png', mult: 100 },
+    'diamond': { emoji: '💎', url: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f48e.png', mult: 50 },
+    'bell':    { emoji: '🔔', url: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f514.png', mult: 25 },
+    'grape':   { emoji: '🍇', url: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f347.png', mult: 10 },
+    'lemon':   { emoji: '🍋', url: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f34b.png', mult: 5 },
+    'cherry':  { emoji: '🍒', url: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f352.png', mult: 2 }
 };
 
-export async function generateSlotCanvas(grid, bet, winAmount = 0, isSpinning = false) {
-    const canvas = createCanvas(800, 600);
+export async function generateSlotCanvas(gridKeys, bet, winAmount = 0) {
+    // RESOLUÇÃO ULTRA-HD QUADRADA LARGA (1400x1100)
+    // Esse formato impede que o Discord esprema a imagem na horizontal
+    const canvasWidth = 1400; 
+    const canvasHeight = 1100;
+    const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
 
-    // Fundo da máquina
+    // Fundo da máquina (Preto Premium)
     ctx.fillStyle = '#0a0b10';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Borda Neon da Máquina
-    ctx.strokeStyle = winAmount > 0 ? '#00FF66' : '#FF6600'; // Fica verde se ganhar
-    ctx.lineWidth = 10;
-    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+    // Borda Neon da Máquina (Amarela ou Verde na vitória)
+    ctx.strokeStyle = winAmount > 0 ? '#00FF66' : '#FFD700';
+    ctx.lineWidth = 15;
+    ctx.strokeRect(15, 15, canvasWidth - 30, canvasHeight - 30);
 
-    // Letreiro do Tigrinho
-    ctx.fillStyle = '#FF6600';
-    ctx.font = 'bold 60px Arial';
+    // TÍTULO GIGANTE
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 80px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('🐯 FORTUNE TIGER 🐯', canvas.width / 2, 80);
+    ctx.fillText('🐯 FORTUNE TIGER KIBO 🐯', canvasWidth / 2, 120);
 
-    // Painel de Informações (Aposta e Ganho)
+    // PAINEL DE INFORMAÇÕES (Aposta e Ganho)
     ctx.fillStyle = '#11131a';
-    ctx.fillRect(50, 110, 700, 70);
+    ctx.fillRect(80, 160, 1240, 120);
     ctx.strokeStyle = '#22252c';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(50, 110, 700, 70);
+    ctx.lineWidth = 6;
+    ctx.strokeRect(80, 160, 1240, 120);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 28px Courier New';
+    ctx.font = 'bold 45px Courier New';
     ctx.textAlign = 'left';
-    ctx.fillText(`APOSTA: $${bet.toLocaleString()}`, 70, 155);
+    ctx.fillText(`APOSTA ATUAL: $${bet.toLocaleString('pt-BR')}`, 120, 235);
 
     ctx.textAlign = 'right';
-    if (isSpinning) {
-        ctx.fillStyle = '#FFD700';
-        ctx.fillText(`GIRANDO...`, 730, 155);
-    } else if (winAmount > 0) {
+    if (winAmount > 0) {
         ctx.fillStyle = '#00FF66';
-        ctx.fillText(`GANHO: +$${winAmount.toLocaleString()}`, 730, 155);
+        ctx.shadowColor = '#00FF66'; ctx.shadowBlur = 15;
+        ctx.fillText(`LUCRO: +$${winAmount.toLocaleString('pt-BR')}`, 1300, 235);
+        ctx.shadowBlur = 0;
     } else {
         ctx.fillStyle = '#FF4444';
-        ctx.fillText(`NENHUM GANHO`, 730, 155);
+        ctx.fillText(`NENHUM GANHO`, 1300, 235);
     }
 
-    // DESENHAR O GRID 3x3
-    const startX = 140;
-    const startY = 210;
-    const boxSize = 160;
-    const gap = 20;
+    // DESENHAR O GRID 3x3 DE EMOTES COLORIDOS
+    const boxSize = 350; // Caixas GIGANTES para HD
+    const gap = 30;
+    
+    // Centraliza o grid horizontalmente
+    const startX = (canvasWidth - (3 * boxSize) - (2 * gap)) / 2;
+    const startY = 320; // Rebaixado para caber o título e painel
 
+    // Desenha as caixas e carrega as imagens
     for (let row = 0; row < 3; row++) {
         for (let col = 0; col < 3; col++) {
-            const symbolKey = grid[row][col];
-            const symbolData = SLOTS[symbolKey];
+            const key = gridKeys[row][col];
+            const symbolData = SLOTS[key];
             
             const x = startX + (col * (boxSize + gap));
             const y = startY + (row * (boxSize + gap));
@@ -72,16 +79,26 @@ export async function generateSlotCanvas(grid, bet, winAmount = 0, isSpinning = 
             ctx.fillRect(x, y, boxSize, boxSize);
             
             // Borda da Pedra
-            ctx.strokeStyle = symbolData ? symbolData.color : '#333';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = winAmount > 0 ? '#00FF66' : '#FFD700';
+            ctx.lineWidth = 5;
             ctx.strokeRect(x, y, boxSize, boxSize);
 
-            // Texto da Pedra
-            if (symbolData) {
-                ctx.fillStyle = symbolData.color;
-                ctx.font = 'bold 32px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(symbolKey, x + (boxSize / 2), y + (boxSize / 2) + 12);
+            // CARREGA E DESENHA O EMOTE COLORIDO (Twemoji PNG)
+            try {
+                // loadImage faz o download da imagem do CDN (Twitter) e desenha colorida
+                const img = await loadImage(symbolData.url);
+                
+                // Centraliza a imagem 72x72 (escala para boxSize) dentro da caixa 350x350
+                const imgSize = boxSize * 0.7; // Imagem ocupa 70% da caixa
+                const imgX = x + (boxSize - imgSize) / 2;
+                const imgY = y + (boxSize - imgSize) / 2;
+                
+                ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
+            } catch (err) {
+                console.error(`Erro ao carregar emote para o Canvas: ${symbolData.emoji}`, err);
+                // Fallback (Texto em B&W se a imagem falhar - Raro)
+                ctx.fillStyle = '#FFFFFF'; ctx.font = '70px Arial'; ctx.textAlign = 'center';
+                ctx.fillText(symbolData.emoji, x + boxSize / 2, y + boxSize / 2 + 25);
             }
         }
     }

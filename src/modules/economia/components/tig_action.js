@@ -4,12 +4,12 @@ import { generateSlotCanvas, SLOTS } from '../../../utils/canvasTigrinho.js';
 
 // Rolos viciados (RTP): Tem muito mais cereja do que Tigre
 const REEL = [
-    'CEREJA', 'CEREJA', 'CEREJA', 'CEREJA', 'CEREJA', 
-    'LIMÃO', 'LIMÃO', 'LIMÃO', 'LIMÃO',
-    'UVA', 'UVA', 'UVA', 
-    'SINO', 'SINO', 
-    'DIMA', 
-    'TIGRE' // Só 1 tigre na roleta! Raro!
+    'cherry', 'cherry', 'cherry', 'cherry', 'cherry', 
+    'lemon', 'lemon', 'lemon', 'lemon',
+    'grape', 'grape', 'grape', 
+    'bell', 'bell', 
+    'diamond', 
+    'tiger' // Só 1 tigre! Raro!
 ];
 
 function getRandomSymbol() {
@@ -17,15 +17,15 @@ function getRandomSymbol() {
 }
 
 export default {
-    customId: 'tig_action', // O sistema captura os cliques aqui
+    customId: 'tig_action', 
     execute: async (interaction) => {
         const parts = interaction.customId.split('_');
         const action = parts[2]; // down, up, spin, exit
-        let currentBet = parseInt(parts[3]); // Aposta atual
-        const ownerId = parts[4]; // Dono da máquina
+        let currentBet = parseInt(parts[3]); 
+        const ownerId = parts[4]; 
 
         if (interaction.user.id !== ownerId) {
-            return interaction.reply({ content: '🚫 Essa máquina já está sendo usada. Use `k tigrinho` para abrir a sua!', ephemeral: true });
+            return interaction.reply({ content: '🚫 Essa máquina já está sendo usada. Use `k tigrinho`!', ephemeral: true });
         }
 
         // --- AÇÃO: SAIR ---
@@ -33,16 +33,15 @@ export default {
             return interaction.update({ content: '🏃 Você saiu da máquina.', files: [], components: [] });
         }
 
-        // --- AÇÃO: AUMENTAR/DIMINUIR APOSTA ---
+        // --- AÇÃO: ALTERAR APOSTA ---
         if (action === 'up') currentBet *= 2;
-        if (action === 'down') currentBet = Math.max(100, Math.floor(currentBet / 2)); // Mínimo 100
+        if (action === 'down') currentBet = Math.max(100, Math.floor(currentBet / 2));
 
-        // Se só mudou a aposta, atualiza os botões (sem girar)
         if (action === 'up' || action === 'down') {
             const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`tig_action_down_${currentBet}_${ownerId}`).setLabel('➖ Diminuir').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`tig_action_down_${currentBet}_${ownerId}`).setLabel('➖').setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder().setCustomId(`tig_action_spin_${currentBet}_${ownerId}`).setLabel(`🎰 GIRAR ($${currentBet})`).setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId(`tig_action_up_${currentBet}_${ownerId}`).setLabel('➕ Aumentar').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId(`tig_action_up_${currentBet}_${ownerId}`).setLabel('➕').setStyle(ButtonStyle.Primary),
                 new ButtonBuilder().setCustomId(`tig_action_exit_0_${ownerId}`).setLabel('🏃 Sair').setStyle(ButtonStyle.Danger)
             );
             return interaction.update({ components: [row] });
@@ -53,48 +52,47 @@ export default {
             const userDb = await prisma.user.findUnique({ where: { userId: ownerId } });
             
             if (userDb.balance < currentBet) {
-                return interaction.reply({ content: '❌ Você não tem dinheiro suficiente na carteira para essa aposta!', ephemeral: true });
+                return interaction.reply({ content: '❌ Você não tem dinheiro suficiente na carteira!', ephemeral: true });
             }
 
-            // Cobra a aposta do usuário
+            // Cobra a aposta
             await prisma.user.update({ where: { userId: ownerId }, data: { balance: { decrement: currentBet } } });
 
-            // 1. Gera a grade 3x3 aleatória
-            const grid = [
+            // 1. Gera a grade 3x3 aleatória (Chaves)
+            const gridKeys = [
                 [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()],
                 [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()],
                 [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()]
             ];
 
-            // 2. Calcula as linhas vendscedoras (3 Horizontais, 2 Diagonais)
+            // 2. Calcula Ganho
             let totalWin = 0;
             const lines = [
-                [grid[0][0], grid[0][1], grid[0][2]], // Linha 1
-                [grid[1][0], grid[1][1], grid[1][2]], // Linha 2
-                [grid[2][0], grid[2][1], grid[2][2]], // Linha 3
-                [grid[0][0], grid[1][1], grid[2][2]], // Diagonal \
-                [grid[2][0], grid[1][1], grid[0][2]]  // Diagonal /
+                [gridKeys[0][0], gridKeys[0][1], gridKeys[0][2]], // Horiz 1
+                [gridKeys[1][0], gridKeys[1][1], gridKeys[1][2]], // Horiz 2
+                [gridKeys[2][0], gridKeys[2][1], gridKeys[2][2]], // Horiz 3
+                [gridKeys[0][0], gridKeys[1][1], gridKeys[2][2]], // Diag \
+                [gridKeys[2][0], gridKeys[1][1], gridKeys[0][2]]  // Diag /
             ];
 
             for (const line of lines) {
-                // Se os três forem iguais
+                // Compara as chaves: tiger === tiger === tiger
                 if (line[0] === line[1] && line[1] === line[2]) {
-                    const symbol = line[0];
-                    const multiplier = SLOTS[symbol].mult;
+                    const symbolKey = line[0];
+                    const multiplier = SLOTS[symbolKey].mult;
                     totalWin += (currentBet * multiplier);
                 }
             }
 
-            // Paga o prêmio se houver ganho
+            // Paga o prêmio
             if (totalWin > 0) {
                 await prisma.user.update({ where: { userId: ownerId }, data: { balance: { increment: totalWin } } });
             }
 
-            // 3. Atualiza a imagem com o resultado do giro
-            const buffer = await generateSlotCanvas(grid, currentBet, totalWin, false);
-            const attachment = new AttachmentBuilder(buffer, { name: 'slot.png' });
+            // 3. Atualiza a imagem COLORIDA E HD
+            const buffer = await generateSlotCanvas(gridKeys, currentBet, totalWin);
+            const attachment = new AttachmentBuilder(buffer, { name: 'kibo_slot.png' });
 
-            // Recria os botões mantendo a aposta atual
             const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(`tig_action_down_${currentBet}_${ownerId}`).setLabel('➖').setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder().setCustomId(`tig_action_spin_${currentBet}_${ownerId}`).setLabel(`🎰 GIRAR NOVAMENTE`).setStyle(ButtonStyle.Success),
@@ -102,7 +100,7 @@ export default {
                 new ButtonBuilder().setCustomId(`tig_action_exit_0_${ownerId}`).setLabel('🏃 Sair').setStyle(ButtonStyle.Danger)
             );
 
-            let msgExtra = totalWin > 0 ? `🎉 **GRANDE VITÓRIA!** Você ganhou **$${totalWin.toLocaleString()}**!` : '💸 Que pena, não formou linha. Tente novamente!';
+            let msgExtra = totalWin > 0 ? `🎉 **MÁQUINA PAGOU!** Você ganhou **$${totalWin.toLocaleString('pt-BR')}**!` : '💸 Nenhum ganho. Gire novamente!';
 
             return interaction.update({ 
                 content: msgExtra,
