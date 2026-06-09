@@ -70,5 +70,6 @@ model UserBusiness {
   userId        String
   businessId    String   
   lastCollected DateTime @default(now())
+  forSalePrice  Float?   // NOVO: Preço de venda definido pelo jogador (nulo se não estiver à venda)
   user          User     @relation(fields: [userId], references: [userId])
 }
