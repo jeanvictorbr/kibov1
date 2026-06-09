@@ -4,16 +4,14 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "postinstall": "npx prisma generate",
-    "start": "npx prisma db push --accept-data-loss && node src/index.js"
+    "start": "npx prisma generate && npx prisma db push --accept-data-loss && node src/index.js"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
     "axios": "^1.6.7",
+    "canvas": "^2.11.2",
     "discord.js": "^14.14.0",
-    "dotenv": "^16.4.0"
-  },
-  "devDependencies": {
+    "dotenv": "^16.4.0",
     "prisma": "^5.10.0"
   }
 }
