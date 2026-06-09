@@ -12,7 +12,7 @@ export default {
         const content = message.content.trim();
         const prefixRegex = /^k\s*([a-zA-Z]+)(.*)/i; 
         const match = content.match(prefixRegex);
-
+        const prefixRegex = /^k([a-zA-Z]+)(.*)/i;
         if (!match) return; 
 
         const commandName = match[1].toLowerCase();
