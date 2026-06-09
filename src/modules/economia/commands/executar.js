@@ -20,7 +20,6 @@ export default {
         }
 
         // 2. VERIFICAÇÃO DO ITEM (AMULETO DA SORTE)
-        // Colocamos a lógica DENTRO do execute, agora funciona!
         const temAmuleto = await prisma.inventory.findFirst({
             where: { userId: userId, itemId: 'Amuleto' }
         });
