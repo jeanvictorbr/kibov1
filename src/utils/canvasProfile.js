@@ -1,9 +1,8 @@
 import { createCanvas, loadImage } from 'canvas';
 
-// 👑 COLOQUE AQUI O SEU ID DO DISCORD (Botão Direito no seu perfil -> Copiar ID)
+// COLOQUE AQUI O SEU ID DO DISCORD
 const CEO_IDS = ['1070658145740926987']; 
 
-// Função de segurança para desenhar cantos arredondados (Evita bugs no Linux)
 function drawRoundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -18,167 +17,194 @@ function drawRoundRect(ctx, x, y, width, height, radius) {
     ctx.closePath();
 }
 
-export async function generateProfileCanvas(user, userDb) {
-    const width = 850;
-    const height = 480;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    // Identificação do Nível de Acesso
-    const isCEO = CEO_IDS.includes(user.id);
-    const isVip = userDb.isPremium;
-
-    const themeColor = isCEO ? '#FFD700' : (isVip ? '#00FFFF' : '#00FF66');
-
-    // 1. FUNDO PREMIUM COM PROFUNDIDADE
-    const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-    if (isCEO) {
-        bgGradient.addColorStop(0, '#0a0803'); // Preto Dourado
-        bgGradient.addColorStop(1, '#1a160d');
-    } else {
-        bgGradient.addColorStop(0, '#0a0b10'); // Preto Azulado
-        bgGradient.addColorStop(1, '#161824');
+// Função para quebrar o texto da bio em múltiplas linhas
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let currentY = y;
+    for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+            ctx.fillText(line, x, currentY);
+            line = words[n] + ' ';
+            currentY += lineHeight;
+        } else {
+            line = testLine;
+        }
     }
-    ctx.fillStyle = bgGradient;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillText(line, x, currentY);
+}
 
-    // Efeito de Brilho no Topo (Profundidade)
-    const glow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 400);
-    glow.addColorStop(0, isCEO ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255, 255, 255, 0.03)');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. AVATAR DO JOGADOR COM SOMBRA 3D
-    const avatarX = 110;
-    const avatarY = 110;
-    const radius = 65;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetX = 5;
-    ctx.shadowOffsetY = 5;
+export async function generateProfileCanvas(discordUser, userData) {
+    const canvas = createCanvas(850, 450);
+    const ctx = canvas.getContext('2d');
     
-    ctx.beginPath();
-    ctx.arc(avatarX, avatarY, radius, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fillStyle = '#22252c';
-    ctx.fill();
-    ctx.clip();
+    const isCEO = CEO_IDS.includes(discordUser.id);
+    const isVip = userData.isPremium;
+
+    const themeColor = isCEO ? '#FFD700' : (isVip ? '#00FFFF' : '#FFD700'); 
+
+    // 1. FUNDO PREMIUM ESTILO LIKENESS DINÂMICO
+    // CEO tem fundo preto mais denso para dar ar de exclusividade
+    ctx.fillStyle = isCEO ? '#050505' : '#0a0b10';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Efeito exclusivo do CEO (Luz Dourada no topo)
+    if (isCEO) {
+        const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, 'rgba(255, 215, 0, 0.08)');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Efeito de Linhas de Dados Clandestinas
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < canvas.width; i += 25) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 100, canvas.height); ctx.stroke();
+    }
+
+    // Desenhar nós de rede brilhantes no fundo
+    const nodes = [[100, 80], [750, 90], [400, 380], [800, 400], [50, 420]];
+    nodes.forEach(([nx, ny]) => {
+        ctx.fillStyle = themeColor + '15'; 
+        ctx.beginPath(); ctx.arc(nx, ny, 30, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = themeColor + '50';
+        ctx.beginPath(); ctx.arc(nx, ny, 3, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Borda Principal com Brilho Neon
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = themeColor;
+    ctx.shadowColor = themeColor;
+    ctx.shadowBlur = 15;
+    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    ctx.shadowBlur = 0; 
+
+    // 2. AVATAR CIRCULAR
+    const avatarSize = 150;
+    const avatarX = 50;
+    const avatarY = 50;
+    const centerX = avatarX + avatarSize / 2;
+    const centerY = avatarY + avatarSize / 2;
 
     try {
-        const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
-        const img = await loadImage(avatarUrl);
-        ctx.drawImage(img, avatarX - radius, avatarY - radius, radius * 2, radius * 2);
-    } catch (e) {
-        console.error('Erro ao carregar avatar no perfil', e);
-    }
-    ctx.restore();
-
-    // Borda do Avatar
-    ctx.beginPath();
-    ctx.arc(avatarX, avatarY, radius, 0, Math.PI * 2, true);
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = themeColor;
-    ctx.stroke();
-
-    // 3. INFORMAÇÕES PESSOAIS E CARGO (TAG)
-    ctx.fillStyle = isCEO ? '#FFD700' : '#FFFFFF';
-    ctx.font = 'bold 42px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(user.username.toUpperCase(), 205, 95);
-
-    // Desenhar a TAG do Cargo
-    let roleText = '👤 MEMBRO PADRÃO';
-    let roleBg = '#22252c';
-    let roleTextColor = '#FFFFFF';
-
-    if (isCEO) {
-        roleText = '👑 CEO KIBO';
-        roleBg = '#FFD700';
-        roleTextColor = '#000000';
-    } else if (isVip) {
-        roleText = '💎 MEMBRO VIP';
-        roleBg = '#00FFFF';
-        roleTextColor = '#000000';
-    }
-
-    ctx.font = 'bold 18px Arial';
-    const textWidth = ctx.measureText(roleText).width;
-    
-    // Fundo da TAG
-    ctx.fillStyle = roleBg;
-    drawRoundRect(ctx, 205, 115, textWidth + 30, 32, 16);
-    ctx.fill();
-    
-    // Texto da TAG
-    ctx.fillStyle = roleTextColor;
-    ctx.fillText(roleText, 220, 137);
-
-    // Linha Divisória Elegante
-    ctx.strokeStyle = isCEO ? 'rgba(255, 215, 0, 0.3)' : '#22252c';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(45, 205);
-    ctx.lineTo(805, 205);
-    ctx.stroke();
-
-    // 4. FUNÇÃO PARA DESENHAR AS CAIXAS (GLASSMORPHISM)
-    const drawBox = (x, y, w, h, title, value, icon) => {
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetX = 4;
-        ctx.shadowOffsetY = 4;
+        const avatar = await loadImage(discordUser.displayAvatarURL({ extension: 'png', size: 256 }));
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, (avatarSize / 2) + 6, 0, Math.PI * 2, true);
+        ctx.strokeStyle = themeColor;
+        ctx.lineWidth = 4;
         
-        ctx.fillStyle = '#11131a';
-        drawRoundRect(ctx, x, y, w, h, 12);
-        ctx.fill();
-        ctx.restore();
-
-        // Borda Interna
-        ctx.strokeStyle = isCEO ? 'rgba(255, 215, 0, 0.5)' : '#1a1d26';
-        ctx.lineWidth = 2;
-        drawRoundRect(ctx, x, y, w, h, 12);
+        // Sombra Dourada do Avatar se for o CEO
+        ctx.shadowColor = themeColor; 
+        ctx.shadowBlur = isCEO ? 25 : 15;
         ctx.stroke();
+        ctx.shadowBlur = 0;
 
-        ctx.fillStyle = '#888899';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${icon}  ${title}`, x + 20, y + 30);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, avatarSize / 2, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
+        ctx.restore();
+    } catch (e) { console.error("Erro ao carregar avatar no perfil"); }
+
+    // 3. TEXTOS DE IDENTIDADE
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 42px Arial';
+    ctx.fillText(discordUser.username.toUpperCase(), 230, 90);
+
+    // TAG de cargo customizada (Limpa e Funcional no Linux)
+    if (isCEO) {
+        ctx.fillStyle = themeColor;
+        drawRoundRect(ctx, 230, 103, 110, 26, 6);
+        ctx.fill();
+        
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 15px Arial';
+        ctx.fillText('CEO KIBO', 248, 122);
+    } else {
+        ctx.fillStyle = themeColor;
+        ctx.font = 'italic 20px Arial';
+        ctx.fillText(userData.isPremium ? '💎 Magnata VIP' : 'Membro Padrão', 230, 120);
+    }
+
+    // 4. CAIXA EXCLUSIVA DA BIOGRAFIA (BIO)
+    const bioX = 230;
+    const bioY = 140;
+    const bioWidth = 570;
+    const bioHeight = 65;
+
+    drawRoundRect(ctx, bioX, bioY, bioWidth, bioHeight, 8);
+    ctx.fillStyle = '#11131a';
+    ctx.fill();
+    ctx.strokeStyle = '#22252c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#888899';
+    ctx.font = 'italic 16px Arial';
+    const mensagemBio = userData.bio || "Usa 'k bio' para alterares a tua biografia!";
+    wrapText(ctx, mensagemBio, bioX + 15, bioY + 25, bioWidth - 30, 22);
+
+    // 5. CARDS ECONÓMICOS EXATAMENTE COMO ERAM ANTES
+    const drawEconCard = (x, y, w, h, title, value, isSafe) => {
+        drawRoundRect(ctx, x, y, w, h, 12);
+        ctx.fillStyle = '#11131a';
+        ctx.fill();
+
+        const strokeColor = isSafe ? '#FFD700' : '#22252c';
+        ctx.lineWidth = 2;
+        
+        // CEO tem as caixas cinzas brilhando com leve tom de Ouro
+        ctx.strokeStyle = (isCEO && !isSafe) ? '#333022' : strokeColor;
+        
+        if (isSafe || isCEO) {
+            ctx.shadowColor = isSafe ? '#FFD700' : themeColor;
+            ctx.shadowBlur = isSafe ? 10 : 3;
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = isSafe ? '#FFD700' : '#888899';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(title, x + 15, y + 25);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 26px Courier New';
-        ctx.fillText(value, x + 20, y + 65);
+        ctx.font = 'bold 28px Arial';
+        ctx.fillText(`$${(value || 0).toLocaleString('pt-BR')}`, x + 15, y + 65);
     };
 
-    // 5. RENDIMENTOS FINANCEIROS (Linha do meio)
-    const boxW = 230;
-    const boxH = 90;
-    const boxY = 235;
+    drawEconCard(50, 230, 230, 90, 'CARTEIRA (Risco)', userData.balance, false);
+    drawEconCard(310, 230, 230, 90, 'BANCO (Seguro)', userData.bank, true);
+    drawEconCard(570, 230, 230, 90, 'KIBOCASH', userData.kiboCash, false);
 
-    drawBox(45, boxY, boxW, boxH, 'CARTEIRA', `$${(userDb.balance || 0).toLocaleString()}`, '💵');
-    drawBox(310, boxY, boxW, boxH, 'BANCO', `$${(userDb.bank || 0).toLocaleString()}`, '🏦');
-    drawBox(575, boxY, boxW, boxH, 'KIBO CASH', `${(userDb.kiboCash || userDb.KiboCash || 0).toLocaleString()} KC`, '🪙');
+    // 6. BARRA DE HABILIDADES ORIGINAL
+    const skills = typeof userData.skills === 'string' ? JSON.parse(userData.skills) : (userData.skills || {});
+    
+    drawRoundRect(ctx, 50, 350, 750, 60, 10);
+    ctx.fillStyle = '#11131a';
+    ctx.fill();
+    ctx.strokeStyle = '#22252c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-    // 6. PROFISSÃO E HABILIDADES (Linha de Baixo)
-    const botBoxW = 362;
-    const botBoxH = 80;
-    const botBoxY = 355;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(`HABILIDADES:`, 70, 387);
 
-    // Processamento seguro das Skills
-    const skills = typeof userDb.skills === 'string' ? JSON.parse(userDb.skills) : (userDb.skills || {});
-    const sorteLvl = skills.sorte || 1;
-    const labiaLvl = skills.labia || 1;
+    ctx.fillStyle = '#00FFCC';
+    ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 5;
+    ctx.fillText(`Sorte: Nível ${skills.sorte || 1}`, 340, 387);
+    ctx.shadowBlur = 0;
     
-    let profissao = userDb.currentJob ? userDb.currentJob.toUpperCase() : 'DESEMPREGADO';
-    
-    // Caixa de Profissão
-    drawBox(45, botBoxY, botBoxW, botBoxH, 'OCUPAÇÃO ATUAL', profissao, '💼');
-    
-    // Caixa de Habilidades
-    drawBox(443, botBoxY, botBoxW, botBoxH, 'HABILIDADES DE RPG', `🍀 Lvl ${sorteLvl}   |   🗣️ Lvl ${labiaLvl}`, '🧠');
+    ctx.fillStyle = '#FF4444';
+    ctx.shadowColor = '#FF4444'; ctx.shadowBlur = 5;
+    ctx.fillText(`Lábia: Nível ${skills.labia || 1}`, 560, 387);
+    ctx.shadowBlur = 0;
 
     return canvas.toBuffer();
 }
