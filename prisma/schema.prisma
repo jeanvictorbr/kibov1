@@ -21,6 +21,7 @@ model User {
   currentJob    String    @default("desempregado") // "onesto", "crime", "hacker"
   jobStartedAt  DateTime? // Data que iniciou o trabalho atual
   inventory     Inventory[]
+  businesses    UserBusiness[]
 }
 
 model Transaction {
@@ -62,4 +63,12 @@ model Inventory {
   userId String
   itemId String
   user   User   @relation(fields: [userId], references: [userId])
+}
+
+model UserBusiness {
+  id            String   @id @default(uuid())
+  userId        String
+  businessId    String   
+  lastCollected DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [userId])
 }
