@@ -96,7 +96,7 @@ export async function generateSlotCanvas(gridKeys, bet, winAmount = 0) {
                 ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
             } catch (err) {
                 console.error(`Erro ao carregar emote para o Canvas: ${symbolData.emoji}`, err);
-                // Fallback (Texto em B&W se a imagem falhar - Raro)
+                // Fallback (Texto em B&Ws se a imagem falhar - Raro)
                 ctx.fillStyle = '#FFFFFF'; ctx.font = '70px Arial'; ctx.textAlign = 'center';
                 ctx.fillText(symbolData.emoji, x + boxSize / 2, y + boxSize / 2 + 25);
             }
