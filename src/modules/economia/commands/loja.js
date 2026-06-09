@@ -1,20 +1,21 @@
-import { EmbedBuilder } from 'discord.js';
+import { AttachmentBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
+import { generateLojaCanvas } from '../../../utils/canvasLoja.js';
 
 export default {
     name: 'loja',
     execute: async (message) => {
         const items = await prisma.shopItem.findMany();
-        
-        const embed = new EmbedBuilder()
-            .setTitle('🛒 LOJA DO KIBO')
-            .setColor('#3498db')
-            .setDescription('Compre itens para vantagenss exclusivas!');
+        const buffer = await generateLojaCanvas(items);
+        const attachment = new AttachmentBuilder(buffer, { name: 'loja.png' });
 
-        items.forEach(item => {
-            embed.addFields({ name: `${item.name} - $${item.price}`, value: item.description });
-        });
+        const row = new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(`loja_select_${message.author.id}`)
+                .setPlaceholder('Escolha um item para comprar...')
+                .addOptions(items.map(i => ({ label: i.name, value: i.name, description: `$${i.price}` })))
+        );
 
-        message.reply({ embeds: [embed] });
+        await message.reply({ files: [attachment], components: [row] });
     }
 };
