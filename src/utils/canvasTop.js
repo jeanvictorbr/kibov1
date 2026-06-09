@@ -1,53 +1,52 @@
 import { createCanvas, loadImage } from 'canvas';
 
-export async function generateTopCanvas(topUsers) {
-    const canvasWidth = 600;
-    const itemHeight = 80;
-    const canvasHeight = (topUsers.length * itemHeight) + 120; // 120 para o cabeçalho
-    const canvas = createCanvas(canvasWidth, canvasHeight);
+export async function generateTopCanvas(users) {
+    const canvas = createCanvas(600, 750);
     const ctx = canvas.getContext('2d');
 
     // Fundo
-    ctx.fillStyle = '#121212';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle = '#0a0b10';
+    ctx.fillRect(0, 0, 600, 750);
 
     // Título
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 35px Arial';
-    ctx.fillText('🏆 RANKING DE MILIONÁRIOS', 30, 60);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 40px Arial';
+    ctx.fillText('RANKING DE RICOS', 50, 70);
 
-    // Desenhar cada usuário
-    for (let i = 0; i < topUsers.length; i++) {
-        const user = topUsers[i];
-        const y = 100 + (i * itemHeight);
-
+    // Desenhar a lista
+    let startY = 150;
+    for (let i = 0; i < users.length; i++) {
+        const u = users[i];
+        
         // Posição
+        ctx.fillStyle = '#888888';
         ctx.font = 'bold 20px Arial';
-        ctx.fillStyle = i < 3 ? '#ffcc00' : '#888888';
-        ctx.fillText(`#${i + 1}`, 30, y + 45);
+        ctx.fillText(`${i + 1}º`, 30, startY);
 
         // Avatar
         try {
-            const avatar = await loadImage(user.avatarUrl);
+            const img = await loadImage(u.avatar);
             ctx.save();
             ctx.beginPath();
-            ctx.arc(100, y + 35, 25, 0, Math.PI * 2);
-            ctx.closePath();
+            ctx.arc(100, startY - 15, 25, 0, Math.PI * 2);
             ctx.clip();
-            ctx.drawImage(avatar, 75, y + 10, 50, 50);
+            ctx.drawImage(img, 75, startY - 40, 50, 50);
             ctx.restore();
-        } catch (e) { /* Caso não carregue o avatar */ }
+        } catch(e) {}
 
         // Nome
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '20px Arial';
-        ctx.fillText(user.username.length > 15 ? user.username.substring(0,12) + '...' : user.username, 140, y + 45);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText(u.username, 150, startY - 5);
 
         // Saldo
-        ctx.fillStyle = '#4dff88';
+        ctx.fillStyle = '#00FF66';
+        ctx.font = 'bold 22px Courier New';
         ctx.textAlign = 'right';
-        ctx.fillText(`$${user.balance.toLocaleString()}`, 570, y + 45);
+        ctx.fillText(`$${u.balance.toLocaleString()}`, 570, startY - 5);
         ctx.textAlign = 'left';
+
+        startY += 60;
     }
 
     return canvas.toBuffer();
