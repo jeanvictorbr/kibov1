@@ -1,17 +1,18 @@
-// src/modules/economia/commands/cd.js
+import { AttachmentBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
+import { generateCdCanvas } from '../../../utils/canvasCd.js';
 
 export default {
     name: 'cd',
     execute: async (message) => {
         const cds = await prisma.cooldown.findMany({ where: { userId: message.author.id } });
-        if (cds.length === 0) return message.reply('# ✅ SEM ESPERAS\n**Você está livre para usar todos os comandos!**');
+        
+        // Filtra cooldowns expirados apenas por segurança (opcional, mas bom)
+        const activeCds = cds.filter(c => new Date(c.expiresAt) > new Date());
 
-        let texto = '# ⏳ SEUS COOLDOWNS\n';
-        cds.forEach(c => {
-            const horas = Math.ceil((c.expiresAt - new Date()) / 3600000);
-            texto += `**${c.command.toUpperCase()}**: Restam ${horas}h\n`;
-        });
-        message.reply(texto);
+        const buffer = await generateCdCanvas(message.author, activeCds);
+        const attachment = new AttachmentBuilder(buffer, { name: 'cd_panel.png' });
+
+        await message.channel.send({ files: [attachment] });
     }
 };
