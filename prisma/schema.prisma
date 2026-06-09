@@ -18,6 +18,8 @@ model User {
   skills        Json     @default("{\"sorte\": 1, \"labia\": 1}")
   badges        String[]
   isBanned      Boolean  @default(false)
+  currentJob    String    @default("desempregado") // "onesto", "crime", "hacker"
+  jobStartedAt  DateTime? // Data que iniciou o trabalho atual
 }
 
 model Transaction {

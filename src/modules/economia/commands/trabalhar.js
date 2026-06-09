@@ -1,24 +1,21 @@
-import { prisma } from '../../../core/database.js';
+// src/modules/economia/commands/trabalhar.js
+import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 
 export default {
     name: 'trabalhar',
-    execute: async (message, args, client, reply) => {
-        const user = await prisma.user.findUnique({ where: { userId: message.author.id } });
-        
-        // Base: $1000 a $5000. Se for VIP: 2.5x o valor.
-        let ganho = Math.floor(Math.random() * 4000) + 1000;
-        let bonus = "";
+    execute: async (message) => {
+        const menu = new StringSelectMenuBuilder()
+            .setCustomId('job_select')
+            .setPlaceholder('Escolha sua carreira...')
+            .addOptions([
+                { label: 'Trabalho Onesto', description: 'Ganhos baixos, 0% risco, 100% legal.', value: 'onesto' },
+                { label: 'Mundo do Crime', description: 'Ganhos altos, 50% chance de ser pego.', value: 'crime' },
+                { label: 'Hacker de Elite', description: 'Ganhos absurdos, 80% chance de prisão.', value: 'hacker' }
+            ]);
 
-        if (user?.isPremium) {
-            ganho = Math.floor(ganho * 2.5);
-            bonus = "\n*💎 Bónus VIP aplicado!*";
-        }
-
-        await prisma.user.update({
-            where: { userId: message.author.id },
-            data: { balance: { increment: ganho } }
+        await message.reply({ 
+            content: '# 💼 ESCOLHA SEU DESTINO\n**Ao mudar de emprego, você fica preso nele por 3 dias!**', 
+            components: [new ActionRowBuilder().addComponents(menu)] 
         });
-
-        return message.reply(`# 🏗️ TRABALHO CONCLUÍDO!\n**Você suou a camisa e recebeu $${ganho.toLocaleString()} na carteira.**${bonus}`);
     }
 };
