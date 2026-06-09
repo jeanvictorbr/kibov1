@@ -15,7 +15,7 @@ export default {
                 "Um abraço sincero para esquentar o clima."
             ],
             gifs: [
-                "LINK_GIF_1", "LINK_GIF_2", "LINK_GIF_3", "LINK_GIF_4", "LINK_GIF_5"
+                "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzdwcWZkeWFqN2FnYmppNzFxOHk5b3V3MDExNXc0djFudXBlZWc3biZlcD12MV9naWZzX3NlYXJjaCZjdD1n/vGui2cVNUAqti/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzdwcWZkeWFqN2FnYmppNzFxOHk5b3V3MDExNXc0djFudXBlZWc3biZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l1BgRosJTTs7i7TQ4/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzdwcWZkeWFqN2FnYmppNzFxOHk5b3V3MDExNXc0djFudXBlZWc3biZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BODYd97UpZ4Fq/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzdwcWZkeWFqN2FnYmppNzFxOHk5b3V3MDExNXc0djFudXBlZWc3biZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fWFeUD6s0Y90Y/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzdwcWZkeWFqN2FnYmppNzFxOHk5b3V3MDExNXc0djFudXBlZWc3biZlcD12MV9naWZzX3NlYXJjaCZjdD1n/idvFCtYeBQjGud3Bfr/giphy.gif"
             ]
         };
 

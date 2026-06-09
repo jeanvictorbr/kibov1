@@ -15,7 +15,8 @@ export default {
                 "Aquele bico bem dado, sem dó nem piedade."
             ],
             gifs: [
-                "LINK_GIF_1", "LINK_GIF_2", "LINK_GIF_3", "LINK_GIF_4", "LINK_GIF_5"
+                "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Z3VsbzQ1d3AzbnllcDZqajFyN3NndWx2cXp1cTk1eWt4azVpcWowdyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/mFXlBOty0SxOb0ewkk/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3Ynl6ejkyMmcyMDBtMXIyNHM5MmJzODB5aGw3N3poYmtodGpudHRqeSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ofc0lrbLlOEo2Ryucm/giphy.gif"
+                
             ]
         };
 

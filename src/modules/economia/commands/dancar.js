@@ -15,7 +15,7 @@ export default {
                 "Passinho sincronizado, nota 10!"
             ],
             gifs: [
-                "LINK_GIF_1", "LINK_GIF_2", "LINK_GIF_3", "LINK_GIF_4", "LINK_GIF_5"
+                "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjVxMG5uZDFnMTVyb2llbTJtYm1oYnFrdjI4ZXd5M3o3eDMxdGpkcCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/V7jkATiqn3mRie2LI2/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjVxMG5uZDFnMTVyb2llbTJtYm1oYnFrdjI4ZXd5M3o3eDMxdGpkcCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/V7jkATiqn3mRie2LI2/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjVxMG5uZDFnMTVyb2llbTJtYm1oYnFrdjI4ZXd5M3o3eDMxdGpkcCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1jacd4JEUM03KcdORi/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjVxMG5uZDFnMTVyb2llbTJtYm1oYnFrdjI4ZXd5M3o3eDMxdGpkcCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Xw6yFn7frR3Y4/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bmR5NWp5YWdlOG93cm5wYWI0d3Vqb2wybGdjNm9rcWFuamc4eTZ3cyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/13JipyoTNNvM2c/giphy.gif"
             ]
         };
 
