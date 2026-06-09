@@ -8,15 +8,16 @@ export default {
     execute: async (message) => {
         const userId = message.author.id;
         
-        // Busca QUAIS empresas já têm dono
+        // 1. Busca QUAIS empresas imobiliárias já têm dono
         const allOwned = await prisma.userBusiness.findMany();
         const ownedIds = allOwned.map(b => b.businessId);
 
-        // Gera a imagem do catálogo
+        // 2. Gera a NOVA IMAGEM de duas colunas quadrada
         const buffer = await generateMarketCanvas(ownedIds);
         const attachment = new AttachmentBuilder(buffer, { name: 'market.png' });
 
-        // Só mostra no select menu as que NÃO têm dono
+        // 3. Só mostra no select menu as que NÃO têm dono (Exclusividade)
+        // Usamos businesses (imóveis), não ShopItem (itens de loja).
         const availableOptions = Object.keys(businesses)
             .filter(k => !ownedIds.includes(k))
             .map(k => ({
@@ -28,14 +29,14 @@ export default {
         const components = [];
         if (availableOptions.length > 0) {
             const menu = new StringSelectMenuBuilder()
-                .setCustomId(`emp_action_buy_${userId}`) // Manda a ação pro emp_action.js
-                .setPlaceholder('Selecione a empresa para comprar...')
+                .setCustomId(`emp_action_buy_${userId}`) // Manda a ação pro carregador de empresas
+                .setPlaceholder('Selecione a empresa para comprar do Mercado Oficial...')
                 .addOptions(availableOptions);
             components.push(new ActionRowBuilder().addComponents(menu));
         }
 
         await message.reply({ 
-            content: availableOptions.length === 0 ? '⚠️ **Todas as empresas já têm dono!** Fique de olho, alguma pode falir a qualquer momento e voltar ao mercado.' : '',
+            content: availableOptions.length === 0 ? '⚠️ **Todas as empresas já têm dono!** Fique de olho, alguma pode falir a qualquer momento.' : '',
             files: [attachment], 
             components: components 
         });
