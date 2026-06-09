@@ -1,21 +1,13 @@
 export function parseAmount(input) {
     if (!input) return 0;
-    const str = input.toLowerCase().trim();
-
-    // Lógica de "Tudo"
-    if (['tudo', 'all', 't'].includes(str)) return 'ALL';
-
-    // Conversão de letras para números
-    let multiplier = 1;
-    let cleanStr = str;
-
-    if (str.endsWith('kk')) { multiplier = 1000000; cleanStr = str.replace('kk', ''); }
-    else if (str.endsWith('k')) { multiplier = 1000; cleanStr = str.replace('k', ''); }
-    else if (str.endsWith('m')) { multiplier = 1000000; cleanStr = str.replace('m', ''); }
-    else if (str.endsWith('b') || str.endsWith('bilhao')) { multiplier = 1000000000; cleanStr = str.replace(/b|bilhao/, ''); }
-    else if (str.endsWith('t') || str.endsWith('trilhao')) { multiplier = 1000000000000; cleanStr = str.replace(/t|trilhao/, ''); }
-    else if (str.endsWith('q') || str.endsWith('quadrilhao')) { multiplier = 1000000000000000; cleanStr = str.replace(/q|quadrilhao/, ''); }
-
-    const value = parseFloat(cleanStr);
-    return isNaN(value) ? 0 : Math.floor(value * multiplier);
+    const str = input.toLowerCase();
+    
+    if (str.endsWith('m')) return parseFloat(str) * 1000000;
+    if (str.endsWith('b') || str.endsWith('bilhao')) return parseFloat(str) * 1000000000;
+    if (str.endsWith('t') && !str.includes('tudo') && !str.includes('trilhao')) return parseFloat(str) * 1000000000000; // Ex: 1t (trilhão)
+    if (str.endsWith('trilhao')) return parseFloat(str) * 1000000000000;
+    if (str.endsWith('q') || str.endsWith('quadrilhao')) return parseFloat(str) * 1000000000000000; // Quadrilhão
+    if (str === 'tudo' || str === 'all' || str === 't') return 'ALL'; // Aceita apenas 't' como tudo
+    
+    return parseFloat(str) || 0;
 }
