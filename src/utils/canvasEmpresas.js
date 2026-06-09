@@ -162,4 +162,15 @@ export async function generatePortfolioCanvas(user, userBiz) {
             ctx.fillText('✅ LUCRO DISPONÍVEL PARA COLETAR', 90, y + 115);
         } else {
             ctx.fillStyle = '#888899';
-            ctx.fillText(`⏳
+            ctx.fillText(`⏳ Aguarde ${Math.ceil(24 - horas)}h para coletar`, 90, y + 115);
+        }
+        
+        if (ub.forSalePrice) {
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 30px Arial';
+            ctx.fillText(`[ À VENDA NO MERCADO NEGRO POR $${ub.forSalePrice.toLocaleString()} ]`, 650, y + 60);
+        }
+    });
+
+    return canvas.toBuffer();
+}
