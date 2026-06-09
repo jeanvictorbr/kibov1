@@ -2,7 +2,14 @@ import { prisma } from '../../../core/database.js';
 
 // Memória temporária para guardar o tempo de espera (cooldown) dos assaltantes
 const cooldowns = new Map();
+// Verifica se a vítima tem Colete
+const temColete = await prisma.inventory.findFirst({
+    where: { userId: targetUser.id, itemId: 'Colete' }
+});
 
+if (temColete && Math.random() < 0.5) {
+    return message.reply(`🛡️ **FALHA!** O ${targetUser.username} estava usando um **Colete** e você não conseguiu levar nada!`);
+}
 export default {
     name: 'roubar',
     execute: async (message, args, client, reply, targetUser) => {

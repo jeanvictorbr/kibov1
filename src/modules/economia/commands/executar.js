@@ -1,6 +1,12 @@
 import { prisma } from '../../../core/database.js';
 import { checkCooldown, setCooldown } from '../../../utils/cooldownManager.js';
+const temAmuleto = await prisma.inventory.findFirst({
+    where: { userId: message.author.id, itemId: 'Amuleto' }
+});
 
+if (temAmuleto) {
+    ganho = Math.floor(ganho * 1.5); // Aumenta a recompensa do trabalho
+}
 export default {
     name: 'executar',
     execute: async (message) => {

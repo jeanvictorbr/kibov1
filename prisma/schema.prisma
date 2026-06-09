@@ -47,3 +47,18 @@ model Cooldown {
   expiresAt DateTime
   @@unique([userId, command])
 }
+
+model ShopItem {
+  id          String @id @default(uuid())
+  name        String @unique
+  price       Int
+  description String
+  type        String // Ex: 'COSMETIC', 'BOOSTER', 'UTILITY'
+}
+
+model Inventory {
+  id     String @id @default(uuid())
+  userId String
+  itemId String
+  user   User   @relation(fields: [userId], references: [userId])
+}
