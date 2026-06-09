@@ -1,63 +1,41 @@
 import { createCanvas, loadImage } from 'canvas';
 
 export async function generateKcCanvas(user, userData) {
-    const width = 450;
-    const height = 650;
-    const canvas = createCanvas(width, height);
+    const canvas = createCanvas(450, 650);
     const ctx = canvas.getContext('2d');
 
-    // Fundo Premium (Deep Black)
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(0, 0, width, height);
-
-    // Borda Neon (Estilo Kibo Cash)
+    // Fundo Profissional
+    ctx.fillStyle = '#0a0b10';
+    ctx.fillRect(0, 0, 450, 650);
     ctx.strokeStyle = '#00FF66';
     ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, width - 40, height - 40);
+    ctx.strokeRect(20, 20, 410, 610);
 
-    // Header
+    // Avatar
+    try {
+        const img = await loadImage(user.displayAvatarURL({ extension: 'png', size: 128 }));
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(225, 150, 60, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(img, 165, 90, 120, 120);
+        ctx.restore();
+    } catch(e) {}
+
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
-    ctx.font = 'bold 32px Arial';
-    ctx.fillText('KIBO CASH', width / 2, 70);
-    ctx.fillStyle = '#00FF66';
-    ctx.font = '16px Arial';
-    ctx.fillText('STATUS: ATIVO', width / 2, 95);
+    ctx.font = 'bold 30px Arial';
+    ctx.fillText(user.username, 225, 250);
 
-    // Avatar Circular com Brilho Neon
-    try {
-        const avatar = await loadImage(user.displayAvatarURL({ extension: 'png', size: 256 }));
-        ctx.save();
-        ctx.shadowColor = '#00FF66';
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.arc(width / 2, 220, 80, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(avatar, width / 2 - 80, 140, 160, 160);
-        ctx.restore();
-    } catch (e) {}
-
-    // Nome
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 24px Arial';
-    ctx.fillText(user.username, width / 2, 330);
-
-    // Bloco de Saldos (Efeito Neon)
-    const drawSaldo = (label, value, y) => {
-        ctx.fillStyle = '#888899';
-        ctx.font = '14px Arial';
-        ctx.fillText(label, width / 2, y);
-        ctx.fillStyle = '#00FF66';
-        ctx.shadowColor = '#00FF66';
-        ctx.shadowBlur = 10;
-        ctx.font = 'bold 28px Courier New';
-        ctx.fillText(`$ ${value.toLocaleString('pt-BR')}`, width / 2, y + 35);
-        ctx.shadowBlur = 0;
+    // Saldos Neon
+    const drawLine = (label, val, y) => {
+        ctx.fillStyle = '#888899'; ctx.font = '16px Arial'; ctx.fillText(label, 225, y);
+        ctx.fillStyle = '#00FF66'; ctx.font = 'bold 28px Courier New'; ctx.fillText(`$ ${val.toLocaleString()}`, 225, y + 35);
     };
 
-    drawSaldo('CARTEIRA', userData.balance, 410);
-    drawSaldo('BANCO', userData.bank, 490);
-    drawSaldo('KIBO CASH', userData.kiboCash, 570);
+    drawLine('CARTEIRA', userData.balance, 350);
+    drawLine('BANCO', userData.bank, 450);
+    drawLine('KIBO CASH', userData.kiboCash || 0, 550);
 
     return canvas.toBuffer();
 }

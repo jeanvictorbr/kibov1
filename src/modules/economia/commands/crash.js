@@ -1,42 +1,45 @@
 // src/modules/economia/commands/crash.js
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
+import { AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createCanvas } from 'canvas';
 
-async function generateCrashCanvas(mult) {
-    const canvas = createCanvas(400, 200);
+async function drawCrash(mult, aposta) {
+    const canvas = createCanvas(500, 300);
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0a0b10'; ctx.fillRect(0, 0, 400, 200);
-    ctx.fillStyle = '#00FF66'; ctx.font = 'bold 60px Arial';
+    ctx.fillStyle = '#0a0b10'; ctx.fillRect(0, 0, 500, 300);
+    
+    // Foguetinho (Texto estilo gráfico)
+    ctx.fillStyle = '#00FF66';
+    ctx.font = 'bold 80px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`${mult.toFixed(2)}x`, 200, 120);
+    ctx.fillText(`${mult.toFixed(2)}x`, 250, 150);
+    
+    // Lucro Atual
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Lucro: $ ${(aposta * mult).toFixed(0)}`, 250, 200);
+    
     return canvas.toBuffer();
 }
 
 export default {
     name: 'crash',
-    execute: async (message, args, client, reply) => {
-        const amount = args.find(arg => typeof arg === 'number');
-        if (!amount) return message.reply('**Diga o valor da aposta!**');
+    execute: async (message, args) => {
+        const aposta = parseFloat(args[0]);
+        if (!aposta) return message.reply('Manda o valor da aposta!');
 
+        let mult = 1.0;
+        let rodando = true;
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`crash_cashout_${message.author.id}_${amount}`).setLabel('PARAR').setStyle(ButtonStyle.Danger)
+            new ButtonBuilder().setCustomId(`crash_stop_${message.author.id}_${aposta}`).setLabel('PARAR').setStyle(ButtonStyle.Danger)
         );
 
-        let mult = 1.00;
-        const crashPoint = (Math.random() * (4.0 - 1.2) + 1.2).toFixed(2);
-        
-        const buffer = await generateCrashCanvas(mult);
-        const msg = await message.reply({ files: [new AttachmentBuilder(buffer, { name: 'crash.png' })], components: [row] });
+        const msg = await message.reply({ files: [new AttachmentBuilder(await drawCrash(mult, aposta))], components: [row] });
 
         const interval = setInterval(async () => {
-            mult += 0.20;
-            if (mult >= crashPoint) {
-                clearInterval(interval);
-                await msg.edit({ content: `💥 **CRASHOU EM ${crashPoint}x!**`, files: [], components: [] });
-            } else {
-                const newBuffer = await generateCrashCanvas(mult);
-                await msg.edit({ files: [new AttachmentBuilder(newBuffer, { name: 'crash.png' })] }).catch(() => {});
-            }
-        }, 1500);
+            if (!rodando) return clearInterval(interval);
+            mult += 0.15;
+            await msg.edit({ files: [new AttachmentBuilder(await drawCrash(mult, aposta))] }).catch(() => {});
+            if (mult > 5.0) { rodando = false; msg.edit({ content: '💥 Crashou!', components: [] }); clearInterval(interval); }
+        }, 1000);
     }
 };
