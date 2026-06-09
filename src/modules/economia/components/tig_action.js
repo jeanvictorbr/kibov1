@@ -66,7 +66,7 @@ export default {
                 [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()]
             ];
 
-            // 2. Calcula as linhas vencedoras (3 Horizontais, 2 Diagonais)
+            // 2. Calcula as linhas vendscedoras (3 Horizontais, 2 Diagonais)
             let totalWin = 0;
             const lines = [
                 [grid[0][0], grid[0][1], grid[0][2]], // Linha 1
