@@ -1,101 +1,111 @@
-import { createCanvas } from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
 import os from 'os';
 
-export async function generateDevDashboard(client, totalUsers, globalBalance) {
-    const canvas = createCanvas(900, 550);
+export async function generateDevDashboard(client, totalUsers, globalBalance, devUser) {
+    const canvas = createCanvas(950, 600);
     const ctx = canvas.getContext('2d');
 
-    // 1. Fundo Espacial Premium
-    ctx.fillStyle = '#0a0a0f';
-    ctx.fillRect(0, 0, 900, 550);
+    // Fundo ultra moderno e limpo
+    ctx.fillStyle = '#0b0c10';
+    ctx.fillRect(0, 0, 950, 600);
 
-    // Grelha de Fundo Futurista (Grid Lines)
-    ctx.strokeStyle = 'rgba(255, 215, 0, 0.03)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 900; i += 40) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 550); ctx.stroke();
-    }
-    for (let j = 0; j < 550; j += 40) {
-        ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(900, j); ctx.stroke();
-    }
-
-    // Moldura Externa Dourada
+    // Borda fina minimalista
     ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(0, 0, 900, 550);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(0, 0, 950, 600);
 
-    // 2. Cabeçalho Principal
+    // Cabeçalho Principal
     ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 32px Arial';
-    ctx.fillText('KIBO ENGINE • DEVELOPER DASHBOARD', 45, 60);
+    ctx.font = 'bold 30px Arial';
+    ctx.fillText('KIBO ENGINE CENTRAL MANAGEMENT', 50, 70);
 
-    ctx.fillStyle = '#666677';
+    ctx.fillStyle = '#4f5d75';
     ctx.font = '14px Arial';
-    ctx.fillText(`ID DO PROCESSO: #${process.pid} | PLATAFORMA: ${os.platform().toUpperCase()}`, 45, 85);
+    ctx.fillText(`STATUS: ONLINE | HOST: DISCLOUD RUNTIME | NODE: ${process.version}`, 50, 100);
 
-    // 3. Renderização de "Cards" de Monitorização
-    const drawCard = (x, y, w, h, title, value, subtext, color = '#12121f') => {
-        ctx.fillStyle = color;
+    // Renderizar Foto do Desenvolvedor (Canto Superior Direito)
+    try {
+        const avatarUrl = devUser.displayAvatarURL({ extension: 'png', size: 128 });
+        const avatarImg = await loadImage(avatarUrl);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(850, 85, 45, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatarImg, 805, 40, 90, 90);
+        ctx.restore();
+
+        // Aro de luxo ao redor da foto
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(850, 85, 46, 0, Math.PI * 2, true);
+        ctx.stroke();
+    } catch (e) {
+        console.error("Falha ao desenhar avatar do dev no Canvas:", e);
+    }
+
+    // Função de desenho de cards estruturados
+    const drawModernCard = (x, y, w, h, title, val, sub) => {
+        ctx.fillStyle = '#1f2229';
         ctx.fillRect(x, y, w, h);
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, w, h);
-
+        
+        // Indicador lateral dourado chic
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 14px Arial';
+        ctx.fillRect(x, y, 4, h);
+
+        ctx.fillStyle = '#8d99ae';
+        ctx.font = 'bold 12px Arial';
         ctx.fillText(title, x + 20, y + 30);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText(value, x + 20, y + 65);
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText(val, x + 20, y + 62);
 
-        ctx.fillStyle = '#888899';
-        ctx.font = '12px Arial';
-        ctx.fillText(subtext, x + 20, y + 95);
+        ctx.fillStyle = '#4f5d75';
+        ctx.font = '11px Arial';
+        ctx.fillText(sub, x + 20, y + 85);
     };
 
-    // Linha 1 de Cards (Métricas do Bot)
-    const uptime = Math.floor(client.uptime / 1000 / 60); // em minutos
+    const uptimeMin = Math.floor(client.uptime / 1000 / 60);
     const ramUsada = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
-    drawCard(45, 120, 250, 120, 'SISTEMA OPERACIONAL', `${uptime} min`, 'Tempo Total de Uptime');
-    drawCard(320, 120, 250, 120, 'PERFORMANCE HARDWARE', `${ramUsada} MB`, `RAM Alocada na Discloud`);
-    drawCard(595, 120, 260, 120, 'LATÊNCIA DA API', `${client.ws.ping}ms`, 'Ping do WebSocket Discord');
 
-    // Linha 2 de Cards (Métricas da Base de Dados)
-    drawCard(45, 265, 250, 120, 'GUILDS ATIVAS', `${client.guilds.cache.size}`, 'Servidores Conectados');
-    drawCard(320, 265, 250, 120, 'USUÁRIOS REGISTADOS', `${totalUsers}`, 'Contas no PostgreSQL');
-    drawCard(595, 265, 260, 120, 'ECONOMIA GLOBAL', `$${globalBalance.toLocaleString()}`, 'Volume Total Emitido');
+    // Grid de Informações
+    drawModernCard(50, 150, 260, 110, 'UPTIME DO PROCESSO', `${uptimeMin} Minutos`, 'Tempo ininterrupto online');
+    drawModernCard(340, 150, 260, 110, 'CONSUMO DE MEMÓRIA', `${ramUsada} MB`, 'Uso atual de heap RAM');
+    drawModernCard(630, 150, 270, 110, 'PING DA API DISCORD', `${client.ws.ping}ms`, 'Tempo de resposta da API');
 
-    // 4. Painel Inferior: Gráfico Analítico de Carga da Engine
-    ctx.fillStyle = '#0f0f1a';
-    ctx.fillRect(45, 410, 810, 100);
-    ctx.strokeStyle = '#333344';
-    ctx.strokeRect(45, 410, 810, 100);
+    drawModernCard(50, 290, 260, 110, 'CENÁRIOS CONECTADOS', `${client.guilds.cache.size} Guilds`, 'Servidores operando o bot');
+    drawModernCard(340, 290, 260, 110, 'CONTAS NO BANCO', `${totalUsers} Contas`, 'Usuários únicos em cache');
+    drawModernCard(630, 290, 270, 110, 'VOLUME FINANCEIRO', `$${globalBalance.toLocaleString()}`, 'Total de capital circulante');
+
+    // Gráfico de Carga em Linha Clean
+    ctx.fillStyle = '#13151a';
+    ctx.fillRect(50, 430, 850, 120);
+    ctx.strokeStyle = '#22252c';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(50, 430, 850, 120);
 
     ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 12px Arial';
-    ctx.fillText('FLUXO DE TRANSAÇÕES EM TEMPO REAL (ENGINE GRAPH)', 65, 435);
+    ctx.font = 'bold 11px Arial';
+    ctx.fillText('LIVE TRANSACTION MONITOR (PERFORMANCE GRÁFICA DA ENGINE)', 70, 455);
 
-    // Desenhar Linha Simulação de Gráfico de Linha (Estilo Alta Performance)
-    ctx.strokeStyle = '#00ffcc';
-    ctx.lineWidth = 3;
+    // Linha do Gráfico Neon Clean
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(65, 490);
-    ctx.lineTo(150, 470);
-    ctx.lineTo(250, 485);
-    ctx.lineTo(380, 445);
-    ctx.lineTo(500, 475);
-    ctx.lineTo(620, 450);
-    ctx.lineTo(720, 465);
-    ctx.lineTo(825, 440);
+    let coords = [[70, 520], [180, 500], [300, 525], [420, 475], [550, 510], [680, 480], [800, 495], [880, 465]];
+    ctx.moveTo(coords[0][0], coords[0][1]);
+    for(let i=1; i<coords.length; i++) {
+        ctx.lineTo(coords[i][0], coords[i][1]);
+    }
     ctx.stroke();
 
-    // Pontos do Gráfico
+    // Pequenas esferas nas dobras do gráfico
     ctx.fillStyle = '#FFFFFF';
-    const pontos = [[65, 490], [150, 470], [250, 485], [380, 445], [500, 475], [620, 450], [720, 465], [825, 440]];
-    pontos.forEach(([px, py]) => {
+    coords.forEach(([cx, cy]) => {
         ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 3, 0, Math.PI * 2);
         ctx.fill();
     });
 

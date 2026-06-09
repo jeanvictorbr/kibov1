@@ -9,12 +9,11 @@ export default {
     async execute(message, client) {
         if (message.author.bot) return;
 
-        // Expressão Regular: Aceita "kpix", "k pix", "Kperfil", etc.
         const content = message.content.trim();
         const prefixRegex = /^k\s*([a-zA-Z]+)(.*)/i; 
         const match = content.match(prefixRegex);
 
-        if (!match) return; // Se não deu match na regex, não é comando do Kibo.
+        if (!match) return; 
 
         const commandName = match[1].toLowerCase();
         const argsRaw = match[2].trim();
@@ -23,18 +22,23 @@ export default {
         const command = client.commands.get(commandName);
         if (!command) return;
 
-        // Lógica de "Alvo Automático": Pega menção OU o autor da mensagem que foi respondida
+        // SISTEMA DE SEGURANÇA INTERNA: Checagem de Banimento Global
+        let userData = await prisma.user.findUnique({ where: { userId: message.author.id } });
+        if (userData?.isBanned) {
+            return message.reply('Você tá banido de usar nosso sistema chefe ;(');
+        }
+
+        // Captura de Alvo Inteligente (Por Menção ou por Resposta de Chat)
         let targetUser = message.mentions.users.first();
         if (!targetUser && message.reference) {
             try {
                 const repliedMsg = await message.channel.messages.fetch(message.reference.messageId);
                 targetUser = repliedMsg.author;
             } catch (err) {
-                console.error("Não foi possível buscar a mensagem respondida.");
+                console.error("Erro ao buscar mensagem respondida.");
             }
         }
 
-        // Parser automático (Transforma '1b' em 1000000000)
         const argsParsed = args.map(arg => {
             const parsed = parseAmount(arg);
             return parsed !== 0 ? parsed : arg;
@@ -54,7 +58,6 @@ export default {
         };
 
         try {
-            // Passamos o targetUser mastigado para o comando!
             await command.execute(message, argsParsed, client, reply, targetUser);
         } catch (error) {
             console.error(error);

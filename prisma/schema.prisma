@@ -16,12 +16,13 @@ model User {
   vipExpiresAt  DateTime?
   skills        Json     @default("{\"sorte\": 1, \"labia\": 1}")
   badges        String[]
+  isBanned      Boolean  @default(false) // ADICIONE ESTA LINHA EXATAMENTE AQUI
 }
 
 model Transaction {
   id          String   @id @default(uuid())
-  fromUserId  String   // Quem enviou
-  toUserId    String   // Quem recebeu
+  fromUserId  String   
+  toUserId    String   
   amount      Float
   timestamp   DateTime @default(now())
 }
