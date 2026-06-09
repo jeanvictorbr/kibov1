@@ -51,6 +51,6 @@ export default {
         // 2. Define o Cooldown de 2 horas após o sucesso
         await setCooldown(userId, 'executar', 2);
         
-        return message.reply(`# 💰 PAGAMENTO RECEBIDO\n**Cargo:** ${user.currentJob.toUpperCase()}\n**Status:** ${jobData.msg}\n**Lucro:** $${ganho.toLocaleString()}\n*O dinheiro já está na sua carteira, chefe!*`);
+        return message.reply(`# 💰 PAGAMENTO RECEBIDO,\n**Cargo:** ${user.currentJob.toUpperCase()}\n**Status:** ${jobData.msg}\n**Lucro:** $${ganho.toLocaleString()}\n*O dinheiro já está na sua carteira, chefe!*`);
     }
 };
