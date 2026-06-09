@@ -21,18 +21,18 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 export async function generateMarketCanvas(ownedIds = []) {
-    // RESOLUÇÃO ULTRA-HD (Larga e Quadrada)
-    const canvasWidth = 1400; 
+    // RESOLUÇÃO QUADRADA E LARGA (1600px - Evita que o Discord esprema a imagem)
+    const canvasWidth = 1600; 
     const keys = Object.keys(businesses);
     const businessesPerRow = 2;
     const totalRows = Math.ceil(keys.length / businessesPerRow);
 
-    // Dimensões exatas das caixas
+    // Dimensões compactas para encaixar o grid com perfeição
     const paddingX = 60;
-    const paddingY = 350; 
-    const gap = 40;
-    const boxWidth = 620;  // Caixas bem largas
-    const boxHeight = 350; // Espaço de sobra pra descrição e lucro
+    const paddingY = 300; 
+    const gap = 30;
+    const boxWidth = 725;  
+    const boxHeight = 240; 
 
     const canvasHeight = paddingY + (totalRows * (boxHeight + gap)); 
     const canvas = createCanvas(canvasWidth, canvasHeight);
@@ -45,22 +45,22 @@ export async function generateMarketCanvas(ownedIds = []) {
     // TÍTULOS GIGANTES
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 65px Arial'; 
-    ctx.fillText('🏢 MERCADO IMOBILIÁRIO OFICIAL', 60, 100);
+    ctx.fillText('🏢 MERCADO IMOBILIÁRIO OFICIAL', 60, 90);
     
     ctx.fillStyle = '#888899';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('Adquira empresas exclusivas do sistema. Apenas UM DONO por negócio!', 60, 160);
+    ctx.fillText('Adquira empresas exclusivas do sistema. Apenas UM DONO por negócio!', 60, 140);
 
-    // AVISO VERMELHO GIGANTE
+    // AVISO VERMELHO
     ctx.fillStyle = '#FF4444';
-    ctx.font = 'bold 35px Arial';
-    ctx.fillText('⚠️ REGRA DE OURO: NÃO DEIXE PASSAR 48H SEM COLETAR!', 60, 240);
-    ctx.fillText('A empresa FALIRÁ automaticamente e você PERDERÁ TUDO!', 60, 290);
+    ctx.font = 'bold 30px Arial';
+    ctx.fillText('⚠️ REGRA DE OURO: NÃO DEIXE PASSAR 48H SEM COLETAR!', 60, 200);
+    ctx.fillText('A empresa FALIRÁ automaticamente e você PERDERÁ TUDO!', 60, 240);
 
     // Linha divisória
     ctx.strokeStyle = '#22252c';
     ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(60, 320); ctx.lineTo(canvasWidth - 60, 320); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(60, 270); ctx.lineTo(canvasWidth - 60, 270); ctx.stroke();
 
     keys.forEach((key, index) => {
         const b = businesses[key];
@@ -68,45 +68,46 @@ export async function generateMarketCanvas(ownedIds = []) {
         
         const col = index % businessesPerRow; 
         const row = Math.floor(index / businessesPerRow); 
+        // Calcula a posição XY exata de cada caixa
         const x = paddingX + (col * (boxWidth + gap)); 
         const y = paddingY + (row * (boxHeight + gap));
 
-        // CAIXA QUADRADA
+        // CAIXA
         ctx.fillStyle = '#11131a';
         ctx.fillRect(x, y, boxWidth, boxHeight);
         ctx.strokeStyle = isOwned ? '#FF4444' : '#FFD700';
-        ctx.lineWidth = 6; // Borda mais grossa
+        ctx.lineWidth = 5;
         ctx.strokeRect(x, y, boxWidth, boxHeight);
 
         // NOME DA EMPRESA
         ctx.fillStyle = isOwned ? '#888899' : '#FFD700';
-        ctx.font = 'bold 42px Arial';
-        ctx.fillText(b.name.toUpperCase(), x + 30, y + 60);
+        ctx.font = 'bold 38px Arial';
+        ctx.fillText(b.name.toUpperCase(), x + 30, y + 55);
 
-        // DESCRIÇÃO (Usando a função de quebrar linha)
+        // DESCRIÇÃO DA EMPRESA
         ctx.fillStyle = '#AAAAAA';
-        ctx.font = '26px Arial';
-        wrapText(ctx, b.desc, x + 30, y + 110, boxWidth - 60, 35);
+        ctx.font = '24px Arial';
+        wrapText(ctx, b.desc, x + 30, y + 95, boxWidth - 60, 30);
 
         // STATUS OU VALOR
         if (isOwned) {
             ctx.fillStyle = '#FF4444';
-            ctx.font = 'bold 35px Courier New';
-            ctx.fillText(`[ INDISPONÍVEL - JÁ COMPRADA ]`, x + 30, y + 210);
+            ctx.font = 'bold 28px Courier New';
+            ctx.fillText(`[ INDISPONÍVEL - JÁ COMPRADA ]`, x + 30, y + 175);
         } else {
             ctx.fillStyle = '#FFFFFF'; 
-            ctx.font = 'bold 35px Courier New';
-            ctx.fillText(`VALOR: $${b.price.toLocaleString()}`, x + 30, y + 210);
+            ctx.font = 'bold 28px Courier New';
+            ctx.fillText(`VALOR: $${b.price.toLocaleString()}`, x + 30, y + 175);
         }
 
-        // RECEITA E CUSTO GIGANTES
+        // RECEITA E CUSTO LADO A LADO
         ctx.fillStyle = '#00FF66';
-        ctx.font = 'bold 30px Arial';
-        ctx.fillText(`RECEITA DIÁRIA: +$${b.revenue.toLocaleString()}`, x + 30, y + 275);
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText(`RECEITA: +$${b.revenue.toLocaleString()}/dia`, x + 30, y + 215);
 
         ctx.fillStyle = '#FF4444';
-        ctx.font = 'bold 30px Arial';
-        ctx.fillText(`CUSTO DIÁRIO:   -$${b.maintenance.toLocaleString()}`, x + 30, y + 320);
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText(`CUSTO: -$${b.maintenance.toLocaleString()}/dia`, x + 380, y + 215);
     });
 
     return canvas.toBuffer();
@@ -149,10 +150,12 @@ export async function generatePortfolioCanvas(user, userBiz) {
         ctx.fillStyle = '#1f2229';
         ctx.fillRect(60, y, 1280, 150);
         
+        // Nome da empresa
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 45px Arial';
         ctx.fillText(b.name, 90, y + 60);
 
+        // Status de Coleta
         ctx.font = 'bold 32px Courier New';
         if (horas > 48) {
             ctx.fillStyle = '#FF4444';
@@ -165,10 +168,13 @@ export async function generatePortfolioCanvas(user, userBiz) {
             ctx.fillText(`⏳ Aguarde ${Math.ceil(24 - horas)}h para coletar`, 90, y + 115);
         }
         
+        // Indicador de Venda: Agora alinhado à direita para NUNCA encavalar com o nome da empresa
         if (ub.forSalePrice) {
             ctx.fillStyle = '#FFD700';
-            ctx.font = 'bold 30px Arial';
-            ctx.fillText(`[ À VENDA NO MERCADO NEGRO POR $${ub.forSalePrice.toLocaleString()} ]`, 650, y + 60);
+            ctx.font = 'bold 28px Arial';
+            ctx.textAlign = 'right'; // Ancorado na direita
+            ctx.fillText(`[ À VENDA NO MERCADO NEGRO POR $${ub.forSalePrice.toLocaleString()} ]`, 1310, y + 60);
+            ctx.textAlign = 'left';  // Volta para a esquerda pro resto do código
         }
     });
 
