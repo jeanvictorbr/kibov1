@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'disc
 import { prisma } from '../../../core/database.js';
 
 export default {
-    customId: 'skill_action', // Captura os cliques de skill_action_sorte e skill_action_labia
+    customId: 'skill_action', 
     execute: async (interaction) => {
         const parts = interaction.customId.split('_');
         const stat = parts[2]; // 'sorte' ou 'labia'
@@ -13,7 +13,7 @@ export default {
         }
 
         const user = await prisma.user.findUnique({ where: { userId: ownerId } });
-        const skills = typeof user.skills === 'string' ? JSON.parse(user.skills) : user.skills;
+        const skills = typeof user.skills === 'string' ? JSON.parse(user.skills) : (user.skills || {});
         
         const currentLvl = skills[stat] || 1;
         const maxLvl = 10;
@@ -22,7 +22,9 @@ export default {
             return interaction.reply({ content: '❌ Esta habilidade já se encontra no nível máximo!', ephemeral: true });
         }
 
-        const cost = currentLvl * 25000;
+        // A MATEMÁTICA PESADA: Dobrando o custo base de $50k
+        const baseCost = 50000;
+        const cost = baseCost * Math.pow(2, currentLvl - 1);
 
         if (user.balance < cost) {
             return interaction.reply({ content: `❌ Precisas de **$${cost.toLocaleString()}** na CARTEIRA para melhorar a tua ${stat.toUpperCase()}!`, ephemeral: true });
@@ -31,7 +33,7 @@ export default {
         // 1. Sobe de Nível
         skills[stat] = currentLvl + 1;
 
-        // 2. Atualiza no Banco de Dados
+        // 2. Atualiza no Banco de Dados cobrando o valor dobrado
         await prisma.user.update({
             where: { userId: ownerId },
             data: {
@@ -40,15 +42,15 @@ export default {
             }
         });
 
-        // 3. Recalcula tudo para desenhar a nova tela
+        // 3. Recalcula tudo para desenhar a nova tela com o valor do PRÓXIMO nível
         const sorteLvl = skills.sorte || 1;
         const labiaLvl = skills.labia || 1;
-        const costSorte = sorteLvl * 25000;
-        const costLabia = labiaLvl * 25000;
+        const costSorte = baseCost * Math.pow(2, sorteLvl - 1);
+        const costLabia = baseCost * Math.pow(2, labiaLvl - 1);
 
         const embed = new EmbedBuilder()
             .setTitle('🧠 ÁRVORE DE HABILIDADES')
-            .setDescription('Invista seu dinheiro na carteira para aprimorar suas habilidades e dominar o submundo! Cada nível fica mais caro.')
+            .setDescription('Invista seu dinheiro na carteira para aprimorar suas habilidades e dominar o submundo! **O custo dobra a cada nível.**')
             .setColor('#00FFFF')
             .addFields(
                 { name: `🍀 Sorte (Nível ${sorteLvl}/${maxLvl})`, value: 'Aumenta em 5% os seus lucros em trabalhos e roubos por nível.', inline: false },
