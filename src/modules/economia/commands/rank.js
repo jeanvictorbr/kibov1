@@ -3,7 +3,7 @@ import { prisma } from '../../../core/database.js';
 import { generateTopCanvas } from '../../../utils/canvasTop.js';
 
 export default {
-    name: 'top',
+    name: 'rank',
     execute: async (message) => {
         // Busca os 10 mais ricos
         const topData = await prisma.user.findMany({
