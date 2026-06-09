@@ -1,17 +1,11 @@
 import { prisma } from '../../../core/database.js';
 import { checkCooldown, setCooldown } from '../../../utils/cooldownManager.js';
-const temAmuleto = await prisma.inventory.findFirst({
-    where: { userId: message.author.id, itemId: 'Amuleto' }
-});
 
-if (temAmuleto) {
-    ganho = Math.floor(ganho * 1.5); // Aumenta a recompensa do trabalho
-}
 export default {
     name: 'executar',
     execute: async (message) => {
         const userId = message.author.id;
-        
+
         // 1. Verifica Cooldown
         const tempoCD = await checkCooldown(userId, 'executar');
         if (tempoCD) {
@@ -25,6 +19,12 @@ export default {
             return message.reply('**Você está desempregado, chefe!**\nUse `k trabalhar` para escolher uma profissão.');
         }
 
+        // 2. VERIFICAÇÃO DO ITEM (AMULETO DA SORTE)
+        // Colocamos a lógica DENTRO do execute, agora funciona!
+        const temAmuleto = await prisma.inventory.findFirst({
+            where: { userId: userId, itemId: 'Amuleto' }
+        });
+
         const jobs = {
             onesto: { min: 500, max: 1000, risco: 0, msg: "Você fez um trabalho exemplar hoje, patrão!" },
             crime: { min: 2000, max: 5000, risco: 0.5, msg: "Você agiu nas sombras e o serviço foi concluído com sucesso!" },
@@ -35,22 +35,29 @@ export default {
         
         // Check Risco
         if (Math.random() < jobData.risco) {
-            // Se for pego, definimos cooldown de 2 horas como punição
             await setCooldown(userId, 'executar', 2);
-            return message.reply('# 🚨 FLAGRANTE!\n**A polícia apareceu do nada e você teve que abandonar tudo para não ser preso.**\n*Fica esperto na próxima, vida de crime é assim mesmo.*');
+            return message.reply('# 🚨 FLAGRANTE!\n**A polícia apareceu do nada e você teve que abandonar tudo para não ser preso.**');
         }
 
-        const ganho = Math.floor(Math.random() * (jobData.max - jobData.min) + jobData.min);
+        let ganho = Math.floor(Math.random() * (jobData.max - jobData.min) + jobData.min);
         
+        // Se tiver amuleto, aumenta o ganho em 50%
+        if (temAmuleto) {
+            ganho = Math.floor(ganho * 1.5);
+        }
+
         // Aplica o ganho
         await prisma.user.update({ 
             where: { userId: user.userId }, 
             data: { balance: { increment: ganho } } 
         });
 
-        // 2. Define o Cooldown de 2 horas após o sucesso
+        // 3. Define o Cooldown de 2 horas
         await setCooldown(userId, 'executar', 2);
         
-        return message.reply(`# 💰 PAGAMENTO RECEBIDO,\n**Cargo:** ${user.currentJob.toUpperCase()}\n**Status:** ${jobData.msg}\n**Lucro:** $${ganho.toLocaleString()}\n*O dinheiro já está na sua carteira, chefe!*`);
+        let replyMsg = `# 💰 PAGAMENTO RECEBIDO\n**Cargo:** ${user.currentJob.toUpperCase()}\n**Status:** ${jobData.msg}\n**Lucro:** $${ganho.toLocaleString()}`;
+        if (temAmuleto) replyMsg += `\n*💎 Seu **Amuleto** aumentou seu ganho!*`;
+        
+        return message.reply(replyMsg);
     }
 };
