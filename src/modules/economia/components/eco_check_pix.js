@@ -1,5 +1,5 @@
 import { prisma } from '../../../core/database.js';
-import { generateReceipt } from '../../../utils/canvasRecibo.js';
+import { generatePixReceipt } from '../../../utils/canvasRecibo.js'; // Mudamos a importação
 import { AttachmentBuilder, MessageFlags } from 'discord.js';
 
 export default {
@@ -13,7 +13,7 @@ export default {
         }
 
         try {
-            // 1. O UPSERT PODEROSO: Atualiza se existir, CRIA se não existir!
+            // 1. Atualiza/Cria o Remetente e Destinatário
             await prisma.user.upsert({
                 where: { userId: senderId },
                 update: { bank: { decrement: amount } },
@@ -26,18 +26,19 @@ export default {
                 create: { userId: targetId, bank: amount }
             });
 
-            // 2. Registrar transação no extrato
-            await prisma.transaction.create({
+            // 2. Registrar a transação e PEGAR O ID DELA
+            const transacao = await prisma.transaction.create({
                 data: { fromUserId: senderId, toUserId: targetId, amount: amount }
             });
 
             const targetUser = await client.users.fetch(targetId);
             
-            // 3. A CORREÇÃO: Ordem certa dos argumentos (Comprador, Valor, "Nome do Produto")
-            const receiptBuffer = await generateReceipt(interaction.user, amount, `PIX: ${targetUser.username}`);
-            const attachment = new AttachmentBuilder(receiptBuffer, { name: 'recibo_pix.png' });
+            // 3. Usa a NOVA FUNÇÃO de Recibo Bancário! 
+            // Usamos split('-')[0] para o ID não ficar gigante, pegando só os primeiros 8 caracteres do UUID.
+            const receiptBuffer = await generatePixReceipt(interaction.user, targetUser, amount, transacao.id.split('-')[0]);
+            const attachment = new AttachmentBuilder(receiptBuffer, { name: 'comprovante_pix.png' });
 
-            await interaction.update({ content: `✅ **Transferência de $${amount.toLocaleString()} confirmada com sucesso!**`, components: [] });
+            await interaction.update({ content: `✅ **Transferência de $${amount.toLocaleString('pt-BR')} confirmada com sucesso!**`, components: [] });
             await interaction.followUp({ content: 'Aqui está o seu comprovante bancário:', files: [attachment] });
 
         } catch (error) {
