@@ -16,6 +16,6 @@ export default {
             prisma.inventory.create({ data: { userId: message.author.id, itemId: item.name } })
         ]);
 
-        message.reply(`✅ Você comprou **${item.name}** com sucesso!`);
+        message.reply(`✅ Você comprou, **${item.name}** com sucesso!`);
     }
 };

@@ -9,7 +9,7 @@ export default {
         const embed = new EmbedBuilder()
             .setTitle('🛒 LOJA DO KIBO')
             .setColor('#3498db')
-            .setDescription('Compre itens para vantagens exclusivas!');
+            .setDescription('Compre itens para vantagenss exclusivas!');
 
         items.forEach(item => {
             embed.addFields({ name: `${item.name} - $${item.price}`, value: item.description });
