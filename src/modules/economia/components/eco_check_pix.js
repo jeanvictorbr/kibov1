@@ -3,38 +3,49 @@ import { generateReceipt } from '../../../utils/canvasRecibo.js';
 import { AttachmentBuilder } from 'discord.js';
 
 export default {
-    customId: 'pix_confirm', // O loader busca por este ID
+    customId: 'pix_confirm', // O loader busca por este prefixo
     execute: async (interaction, client) => {
-        const [_, __, targetId, amountStr] = interaction.customId.split('_');
+        // Agora recebemos: pix_confirm_SENDERID_TARGETID_AMOUNT
+        const [_, __, senderId, targetId, amountStr] = interaction.customId.split('_');
         const amount = parseFloat(amountStr);
 
-        // Segurança: verificar se quem clicou é quem iniciou
-        if (interaction.user.id !== interaction.message.interaction.user.id) {
-            return interaction.reply({ content: 'Este botão não é para si, chefe!', ephemeral: true });
+        // Segurança blindada: Verifica se quem clicou é o verdadeiro dono do dinheiro
+        if (interaction.user.id !== senderId) {
+            return interaction.reply({ content: 'Tira o olho, chefe! Esse Pix não é seu.', ephemeral: true });
         }
 
-        // Transação
-        const sender = await prisma.user.update({
-            where: { userId: interaction.user.id },
-            data: { balance: { decrement: amount } }
-        });
-        
-        await prisma.user.update({
-            where: { userId: targetId },
-            data: { balance: { increment: amount } }
-        });
+        try {
+            // Desconta do BANCO de quem enviou
+            await prisma.user.update({
+                where: { userId: senderId },
+                data: { bank: { decrement: amount } }
+            });
+            
+            // Adiciona no BANCO de quem recebeu (Pix é transferência eletrônica)
+            await prisma.user.update({
+                where: { userId: targetId },
+                data: { bank: { increment: amount } }
+            });
 
-        // Registrar transação
-        await prisma.transaction.create({
-            data: { fromUserId: interaction.user.id, toUserId: targetId, amount: amount }
-        });
+            // Registrar transação no Extrato
+            await prisma.transaction.create({
+                data: { fromUserId: senderId, toUserId: targetId, amount: amount }
+            });
 
-        // Recibo "Coisa Fina"
-        const targetUser = await client.users.fetch(targetId);
-        const receiptBuffer = await generateReceipt(interaction.user, targetUser, amount);
-        const attachment = new AttachmentBuilder(receiptBuffer, { name: 'recibo.png' });
+            // Recibo Canvas "Coisa Fina"
+            const targetUser = await client.users.fetch(targetId);
+            const receiptBuffer = await generateReceipt(interaction.user, targetUser, amount);
+            const attachment = new AttachmentBuilder(receiptBuffer, { name: 'recibo_pix.png' });
 
-        await interaction.update({ content: `✅ Transferência confirmada!`, components: [] });
-        await interaction.followUp({ content: 'Aqui está o seu recibo:', files: [attachment] });
+            // Apaga os botões e confirma
+            await interaction.update({ content: `✅ **Pix de $${amount.toLocaleString()} enviado com sucesso!**`, components: [] });
+            await interaction.followUp({ content: 'Aqui está o seu comprovante bancário:', files: [attachment] });
+
+        } catch (error) {
+            console.error("Erro no processamento do Pix:", error);
+            if (!interaction.replied) {
+                await interaction.reply({ content: 'Erro no servidor do banco central. Tente novamente mais tarde.', ephemeral: true });
+            }
+        }
     }
 };
