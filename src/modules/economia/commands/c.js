@@ -4,7 +4,7 @@ import { prisma } from '../../../core/database.js';
 import { generateKcCanvas } from '../../../utils/canvasKc.js'; 
 
 export default {
-    name: 'kc',
+    name: 'c',
     execute: async (message, args, client, reply) => {
         let user = await prisma.user.findUnique({ where: { userId: message.author.id } });
         if (!user) {
