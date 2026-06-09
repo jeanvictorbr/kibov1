@@ -4,12 +4,24 @@ export async function generateCdCanvas(user, cooldowns) {
     const canvas = createCanvas(450, 450);
     const ctx = canvas.getContext('2d');
 
-    // Fundo Premium
+    // Fundo Profundo
     ctx.fillStyle = '#0a0b10';
     ctx.fillRect(0, 0, 450, 450);
-    ctx.strokeStyle = '#00FF66';
+
+    // Borda Cinza Elegante
+    ctx.strokeStyle = '#444444';
     ctx.lineWidth = 3;
     ctx.strokeRect(10, 10, 430, 430);
+
+    // Efeito Neon vindo de baixo
+    ctx.shadowColor = '#444444';
+    ctx.shadowBlur = 25;
+    ctx.strokeStyle = '#444444';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(20, 430); ctx.lineTo(430, 430);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Avatar
     try {
@@ -28,24 +40,26 @@ export async function generateCdCanvas(user, cooldowns) {
     ctx.textAlign = 'center';
     ctx.fillText('PAINEL DE COOLDOWNS', 225, 140);
 
-    // Listagem
+    // Lista de Cooldowns
     let startY = 190;
     if (cooldowns.length === 0) {
-        ctx.fillStyle = '#00FF66';
+        ctx.fillStyle = '#666666';
         ctx.font = 'bold 18px Arial';
         ctx.fillText('VOCÊ ESTÁ LIVRE, CHEFE!', 225, 250);
     } else {
         cooldowns.forEach((c, index) => {
             const horas = Math.ceil((new Date(c.expiresAt) - new Date()) / 3600000);
             
-            ctx.fillStyle = '#888899';
-            ctx.font = '16px Arial';
+            // Comando
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'left';
             ctx.fillText(c.command.toUpperCase(), 80, startY + (index * 40));
             
-            ctx.fillStyle = '#FFD700';
+            // Tempo Restante
+            ctx.fillStyle = '#AAAAAA';
             ctx.textAlign = 'right';
-            ctx.fillText(`${horas} hora(s)`, 370, startY + (index * 40));
+            ctx.fillText(`${horas}h restante`, 370, startY + (index * 40));
         });
     }
 
