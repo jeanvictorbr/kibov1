@@ -8,11 +8,11 @@ export default {
         const data = {
             name: 'socar',
             msgs: [
-                "Soco preciso! A precisão do seu golpe foi recompensada.",
-                "Você acertou um direto na cara!",
-                "Que socaço! O impacto foi gigante.",
-                "Golpe de mestre!",
-                "Você não deu chance para o oponente."
+                "#**Soco preciso! A precisão do seu golpe foi recompensada.**",
+                "#**Você acertou um direto na cara!**",
+                "#**Que socaço! O impacto foi gigante.**",
+                "#**Golpe de mestre!**",
+                "#**Você não deu chance para o oponente.**"
             ],
             gifs: [
                 "LINK_GIF_1", "LINK_GIF_2", "LINK_GIF_3", "LINK_GIF_4", "LINK_GIF_5"
