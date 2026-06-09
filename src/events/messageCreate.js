@@ -9,25 +9,40 @@ export default {
     async execute(message, client) {
         if (message.author.bot) return;
 
-        // Normalização: transforma 'kperfil' em 'k perfil' para o parser entender
-        let content = message.content;
-        if (content.startsWith('kperfil')) content = content.replace('kperfil', 'k perfil');
-        if (!content.startsWith('k ')) return;
+        // Expressão Regular: Aceita "kpix", "k pix", "Kperfil", etc.
+        const content = message.content.trim();
+        const prefixRegex = /^k\s*([a-zA-Z]+)(.*)/i; 
+        const match = content.match(prefixRegex);
 
-        const args = content.slice(2).trim().split(/ +/);
-        const commandName = args.shift().toLowerCase();
+        if (!match) return; // Se não deu match na regex, não é comando do Kibo.
+
+        const commandName = match[1].toLowerCase();
+        const argsRaw = match[2].trim();
+        const args = argsRaw ? argsRaw.split(/ +/) : [];
+
         const command = client.commands.get(commandName);
-
         if (!command) return;
 
-        sendDevLog('comando', `Servidor: ${message.guild.name} | Usuário: ${message.author.tag} | Comando: ${commandName}`);
+        // Lógica de "Alvo Automático": Pega menção OU o autor da mensagem que foi respondida
+        let targetUser = message.mentions.users.first();
+        if (!targetUser && message.reference) {
+            try {
+                const repliedMsg = await message.channel.messages.fetch(message.reference.messageId);
+                targetUser = repliedMsg.author;
+            } catch (err) {
+                console.error("Não foi possível buscar a mensagem respondida.");
+            }
+        }
 
-        const guildData = await prisma.guildConfig.findUnique({ where: { guildId: message.guild.id } });
-
+        // Parser automático (Transforma '1b' em 1000000000)
         const argsParsed = args.map(arg => {
             const parsed = parseAmount(arg);
             return parsed !== 0 ? parsed : arg;
         });
+
+        sendDevLog('comando', `Servidor: ${message.guild.name} | Usuário: ${message.author.tag} | Comando: ${commandName}`);
+
+        const guildData = await prisma.guildConfig.findUnique({ where: { guildId: message.guild.id } });
 
         const reply = async (data) => {
             const embed = createEmbed(data);
@@ -39,7 +54,8 @@ export default {
         };
 
         try {
-            await command.execute(message, argsParsed, client, reply);
+            // Passamos o targetUser mastigado para o comando!
+            await command.execute(message, argsParsed, client, reply, targetUser);
         } catch (error) {
             console.error(error);
             sendDevLog('erro', `Erro em ${commandName}: ${error.stack}`);
