@@ -9,36 +9,40 @@ export default {
         const amount = parseFloat(amountStr);
 
         if (interaction.user.id !== senderId) {
-            // Forma moderna e sem avisos de erro no console
             return interaction.reply({ content: 'Tira o olho, chefe! Esse Pix não é seu.', flags: [MessageFlags.Ephemeral] });
         }
 
         try {
-            await prisma.user.update({
+            // 1. Atualiza/Cria o Remetente (Garante que existe)
+            await prisma.user.upsert({
                 where: { userId: senderId },
-                data: { bank: { decrement: amount } }
+                update: { bank: { decrement: amount } },
+                create: { userId: senderId, bank: -amount } // Caso bizarro: se o remetente não existir, ele vai ter saldo negativo, mas o Prisma precisa de um valor.
             });
             
-            await prisma.user.update({
+            // 2. Atualiza/Cria o Destinatário (Se ele nunca usou o bot, ele vai ser criado agora com o saldo recebido)
+            await prisma.user.upsert({
                 where: { userId: targetId },
-                data: { bank: { increment: amount } }
+                update: { bank: { increment: amount } },
+                create: { userId: targetId, bank: amount }
             });
 
+            // Registrar transação
             await prisma.transaction.create({
                 data: { fromUserId: senderId, toUserId: targetId, amount: amount }
             });
 
             const targetUser = await client.users.fetch(targetId);
             const receiptBuffer = await generateReceipt(interaction.user, targetUser, amount);
-            const attachment = new AttachmentBuilder(receiptBuffer, { name: 'recibo_pix.png' });
+            const attachment = new AttachmentBuilder(receiptBuffer, { name: 'recibo.png' });
 
-            await interaction.update({ content: `✅ **Pix de $${amount.toLocaleString()} enviado com sucesso!**`, components: [] });
-            await interaction.followUp({ content: 'Aqui está o seu comprovante bancário:', files: [attachment] });
+            await interaction.update({ content: `✅ **Transferência de $${amount.toLocaleString()} confirmada com sucesso!**`, components: [] });
+            await interaction.followUp({ content: 'Aqui está o seu recibo:', files: [attachment] });
 
         } catch (error) {
             console.error("Erro no processamento do Pix:", error);
             if (!interaction.replied) {
-                await interaction.reply({ content: 'Erro no servidor do banco central. Tente novamente mais tarde.', flags: [MessageFlags.Ephemeral] });
+                await interaction.reply({ content: '❌ Erro no banco de dados. O utilizador destino nunca interagiu com o bot?', flags: [MessageFlags.Ephemeral] });
             }
         }
     }
