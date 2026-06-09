@@ -39,3 +39,11 @@ model GuildConfig {
   wlWebhookUrl    String?
   casinoEnabled   Boolean  @default(true)
 }
+
+model Cooldown {
+  id        String   @id @default(uuid())
+  userId    String
+  command   String   // 'executar', 'daily', 'mensal', etc
+  expiresAt DateTime
+  @@unique([userId, command])
+}
