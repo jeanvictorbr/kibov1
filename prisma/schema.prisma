@@ -11,12 +11,13 @@ model User {
   id            String   @id @default(uuid())
   userId        String   @unique
   balance       Float    @default(0)
+  bank          Float    @default(0)
   kiboCash      Float    @default(0)
   isPremium     Boolean  @default(false)
   vipExpiresAt  DateTime?
   skills        Json     @default("{\"sorte\": 1, \"labia\": 1}")
   badges        String[]
-  isBanned      Boolean  @default(false) // ADICIONE ESTA LINHA EXATAMENTE AQUI
+  isBanned      Boolean  @default(false)
 }
 
 model Transaction {
