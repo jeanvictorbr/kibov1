@@ -12,7 +12,6 @@ export default {
         }
 
         // --- VERIFICAÇÃO DO ITEM (COLETE) ---
-        // Agora está dentro da função execute, onde targetUser existe
         const temColete = await prisma.inventory.findFirst({
             where: { userId: targetUser.id, itemId: 'Colete' }
         });
@@ -20,7 +19,6 @@ export default {
         if (temColete && Math.random() < 0.5) {
             return message.reply(`🛡️ **FALHA!** O ${targetUser.username} estava usando um **Colete** e você não conseguiu levar nada!`);
         }
-        // ------------------------------------
 
         if (targetUser.id === message.author.id) {
             return message.reply('# 🤦‍♂️ TÁ MALUCO?\n**Você tá tentando bater a própria carteira, chefe! Escolha outra pessoa.**');
@@ -52,31 +50,51 @@ export default {
             return message.reply(`# 🛑 BARRADO!\n**Você precisa ter dinheiro na sua própria carteira para pagar a fiança se for pego!**\nArrume uns trocados primeiro.`);
         }
 
-        // --- A MATEMÁTICA DO CRIME ---
+        // --- HABILIDADES DO ASSALTANTE ---
+        const skills = typeof robber.skills === 'string' ? JSON.parse(robber.skills) : (robber.skills || {});
+        const sorteLvl = skills.sorte || 1;
+        const labiaLvl = skills.labia || 1;
+
+        const bonusSorte = sorteLvl * 0.05; // Aumenta lucro em +5% por nível
+        const bonusLabia = labiaLvl * 0.05; // Desconto na multa de 5% por nível
+
         cooldowns.set(message.author.id, Date.now());
 
         const successChance = Math.random(); 
 
+        // --- 1. SUCESSO (APLICA A SORTE) ---
         if (successChance <= 0.45) {
-            const percent = (Math.floor(Math.random() * 21) + 10) / 100;
-            const stolenAmount = Math.floor(victim.balance * percent);
+            const percent = (Math.floor(Math.random() * 21) + 10) / 100; // Rouba entre 10% a 30%
+            let baseStolen = Math.floor(victim.balance * percent);
+            
+            // Aumenta o valor roubado usando o nível de Sorte
+            let finalStolen = Math.floor(baseStolen * (1 + bonusSorte));
+            
+            // Trava de Segurança: não deixa o valor roubado ser maior do que a vítima realmente tem
+            finalStolen = Math.min(finalStolen, victim.balance);
 
-            await prisma.user.update({ where: { userId: robber.userId }, data: { balance: { increment: stolenAmount } } });
-            await prisma.user.update({ where: { userId: victim.userId }, data: { balance: { decrement: stolenAmount } } });
+            await prisma.user.update({ where: { userId: robber.userId }, data: { balance: { increment: finalStolen } } });
+            await prisma.user.update({ where: { userId: victim.userId }, data: { balance: { decrement: finalStolen } } });
 
-            await prisma.transaction.create({ data: { fromUserId: victim.userId, toUserId: robber.userId, amount: stolenAmount } });
+            await prisma.transaction.create({ data: { fromUserId: victim.userId, toUserId: robber.userId, amount: finalStolen } });
 
-            return message.reply(`# 🥷 ASSALTO BEM SUCEDIDO!\n**Você encostou o ${targetUser.username} num beco e levou $${stolenAmount.toLocaleString()} da carteira dele!**\n*Mete o pé antes que a viatura chegue!* 💰💨`);
+            return message.reply(`# 🥷 ASSALTO BEM SUCEDIDO!\n**Você encostou o ${targetUser.username} num beco e levou $${finalStolen.toLocaleString()} da carteira dele!**\n*Mete o pé antes que a viatura chegue!* 💰💨\n*🍀 A sua **Sorte (Nível ${sorteLvl})** garantiu +${(bonusSorte * 100).toFixed(0)}% a mais no montante do saque!*`);
+        
+        // --- 2. FRACASSO E PRISÃO (APLICA A LÁBIA) ---
         } else {
-            const percent = (Math.floor(Math.random() * 11) + 10) / 100;
-            const fine = Math.floor(robber.balance * percent);
+            const percent = (Math.floor(Math.random() * 11) + 10) / 100; // Multa de 10% a 20%
+            let baseFine = Math.floor(robber.balance * percent);
 
-            await prisma.user.update({ where: { userId: robber.userId }, data: { balance: { decrement: fine } } });
-            await prisma.user.update({ where: { userId: victim.userId }, data: { balance: { increment: fine } } });
+            // Reduz o valor da multa usando a Lábia para convencer os Policiais
+            let finalFine = Math.floor(baseFine * (1 - bonusLabia));
+            finalFine = Math.max(finalFine, 1); // A multa mínima será sempre de 1 dólar
 
-            await prisma.transaction.create({ data: { fromUserId: robber.userId, toUserId: victim.userId, amount: fine } });
+            await prisma.user.update({ where: { userId: robber.userId }, data: { balance: { decrement: finalFine } } });
+            await prisma.user.update({ where: { userId: victim.userId }, data: { balance: { increment: finalFine } } });
 
-            return message.reply(`# 🚓 VOCÊ RODOU!\n**A vítima reagiu e chamou os guardas!**\nVocê tomou um pau e ainda foi obrigado a pagar **$${fine.toLocaleString()}** de indenização para o ${targetUser.username}!\n*Vai curar essas feridas, vagabundo.* 🤕🩸`);
+            await prisma.transaction.create({ data: { fromUserId: robber.userId, toUserId: victim.userId, amount: finalFine } });
+
+            return message.reply(`# 🚓 VOCÊ RODOU!\n**A vítima reagiu e chamou os guardas!**\nVocê tomou um pau e ainda foi obrigado a pagar **$${finalFine.toLocaleString()}** de indenização para o ${targetUser.username}!\n*Vai curar essas feridas, vagabundo.* 🤕🩸\n*🗣️ A sua **Lábia (Nível ${labiaLvl})** impressionou a polícia e te deu ${(bonusLabia * 100).toFixed(0)}% de desconto na multa!*`);
         }
     }
 };
