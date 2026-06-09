@@ -22,6 +22,7 @@ model User {
   jobStartedAt  DateTime? // Data que iniciou o trabalho atual
   inventory     Inventory[]
   businesses    UserBusiness[]
+  bio           String    @default("Usa 'k bio' para alterares a tua biografia!")
 }
 
 model Transaction {
