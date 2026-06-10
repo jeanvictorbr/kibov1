@@ -23,7 +23,7 @@ export default {
             const buffer = await generateDevDashboard(client, totalUsers, globalBalance, message.author);
             const attachment = new AttachmentBuilder(buffer, { name: 'kibo_dashboard.png' });
 
-            // Cria o Menu Interativo
+            // Cria o Menu Interativo COM AS NOVAS FUNÇÕES DE WIPE
             const menu = new StringSelectMenuBuilder()
                 .setCustomId('dev_menu')
                 .setPlaceholder('⚙️ Selecione uma ação de gestão...')
@@ -35,12 +35,17 @@ export default {
                     { label: 'Recolher Capital', description: 'Remover moedas de um usuário.', value: 'remove_money', emoji: '💸' },
                     { label: 'Banir Usuário', description: 'Bloqueia totalmente o uso do bot.', value: 'ban_user', emoji: '🔨' },
                     { label: 'Desbanir Usuário', description: 'Restaura o acesso ao bot.', value: 'unban_user', emoji: '✅' },
-                    { label: 'Sistema White-Label', description: 'Configurar Webhook fantasma.', value: 'set_wl', emoji: '👻' }
+                    { label: 'Sistema White-Label', description: 'Configurar Webhook fantasma.', value: 'set_wl', emoji: '👻' },
+                    // NOVAS OPÇÕES:
+                    { label: 'Wipe: Dinheiro Global', description: 'Zera carteira e banco de TODOS.', value: 'wipe_money', emoji: '🔥' },
+                    { label: 'Wipe: KiboCash Global', description: 'Zera o KiboCash de TODOS.', value: 'wipe_kibocash', emoji: '💎' },
+                    { label: 'Wipe: Empresas do Sistema', description: 'Deleta as empresas de TODOS.', value: 'wipe_business', emoji: '🏢' },
+                    { label: 'Status Operacional', description: 'Ver RAM, Uptime e Top Servidores.', value: 'status_system', emoji: '🖥️' }
                 ]);
 
             const row = new ActionRowBuilder().addComponents(menu);
 
-            // Edita a mensagem com a imagem e o menu
+            // Edita a mensagem com a imagem e o menu restaurados
             await msg.edit({ content: null, files: [attachment], components: [row] });
         } catch (err) {
             console.error("Erro no k dev:", err);

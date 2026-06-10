@@ -21,6 +21,8 @@ model User {
   currentJob    String    @default("desempregado") // "onesto", "crime", "hacker"
   jobStartedAt  DateTime? // Data que iniciou o trabalho atual
   inventory     Inventory[]
+  businesses    UserBusiness[]
+  bio           String    @default("Usa 'k bio' para alterares a tua biografia!")
 }
 
 model Transaction {
@@ -62,4 +64,13 @@ model Inventory {
   userId String
   itemId String
   user   User   @relation(fields: [userId], references: [userId])
+}
+
+model UserBusiness {
+  id            String   @id @default(uuid())
+  userId        String
+  businessId    String   
+  lastCollected DateTime @default(now())
+  forSalePrice  Float?   // NOVO: Preço de venda definido pelo jogador (nulo se não estiver à venda)
+  user          User     @relation(fields: [userId], references: [userId])
 }
