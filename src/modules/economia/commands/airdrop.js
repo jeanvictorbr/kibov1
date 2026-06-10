@@ -86,7 +86,7 @@ export default {
             const splitAmount = Math.floor(amount / claimers.size);
             const winnerList = Array.from(claimers);
 
-            // Injeta o dinheiro na conta de cada ganhador usando transações no banco
+            // Injeta o dinheiro na conta de cada ganhador usando transasções no banco
             for (const winnerId of winnerList) {
                 // Garante que a pessoa tem conta no banco antes de dar o dinheiro
                 await prisma.user.upsert({
