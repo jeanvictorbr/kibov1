@@ -33,15 +33,6 @@ model Transaction {
   timestamp   DateTime @default(now())
 }
 
-model GuildConfig {
-  id              String   @id @default(uuid())
-  guildId         String   @unique
-  wlActive        Boolean  @default(false)
-  wlName          String?
-  wlAvatar        String?
-  wlWebhookUrl    String?
-  casinoEnabled   Boolean  @default(true)
-}
 
 model Cooldown {
   id        String   @id @default(uuid())
@@ -73,4 +64,25 @@ model UserBusiness {
   lastCollected DateTime @default(now())
   forSalePrice  Float?   // NOVO: Preço de venda definido pelo jogador (nulo se não estiver à venda)
   user          User     @relation(fields: [userId], references: [userId])
+}
+
+// Tabela para guardar quem tem distintivo em qual servidor
+model PoliceBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  guildId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, guildId]) // Garante que o cara não é contratado duas vezes no mesmo server
+}
+
+model GuildConfig {
+  id            String   @id @default(uuid())
+  guildId       String   @unique
+  wlActive      Boolean  @default(false)
+  wlName        String?
+  wlAvatar      String?
+  wlWebhookUrl  String?
+  casinoEnabled Boolean  @default(true)
+  delegadoId    String?  // NOVO: A coluna do delegado fundida aqui!
 }

@@ -1,35 +1,31 @@
-import { prisma } from '../../../core/database.js'; // ISSO É O QUE FALTA
-import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } from 'discord.js';
 
 export default {
     name: 'trabalhar',
     execute: async (message) => {
-        // Agora o 'prisma' está definido graças ao import acima
-        const user = await prisma.user.findUnique({ where: { userId: message.author.id } });
-        
-        if (user?.currentJob !== "desempregado" && user?.currentJob !== null) {
-            // Lógica de tempo para mudar
-            const diff = new Date() - new Date(user.jobStartedAt);
-            const tresDias = 3 * 24 * 60 * 60 * 1000;
-            
-            if (diff < tresDias) {
-                const horas = Math.ceil((tresDias - diff) / 3600000);
-                return message.reply(`**Você já é um ${user.currentJob.toUpperCase()}!**\nAguarde ${horas} horas para pedir demissão.`);
-            }
-        }
+        const embed = new EmbedBuilder()
+            .setTitle('🏢 Agência de Empregos do Submundo')
+            .setDescription('A vida não está fácil e precisas de fazer dinheiro. Escolhe o teu caminho. Lembra-te: quanto maior o risco, maior o lucro.')
+            .setColor('#2F3136')
+            .addFields(
+                { name: '👷 Cidadão Honesto', value: 'Trabalho seguro. Ganha dinheiro limpo sem riscos de ser preso.' },
+                { name: '🥷 Ladrão de Rua', value: 'Bate carteiras. Risco alto, mas liberta comandos de assalto.' },
+                { name: '💻 Hacker', value: 'Invade contas bancárias no silêncio do teu quarto.' },
+                { name: '🚓 Oficial de Polícia', value: 'Caça os criminosos. **Requer um distintivo do Delegado local.**' }
+            );
 
         const menu = new StringSelectMenuBuilder()
-            .setCustomId(`job_select_${message.author.id}`) 
-            .setPlaceholder('Escolha sua carreira...')
+            .setCustomId('job_select')
+            .setPlaceholder('Selecione a sua Profissão...')
             .addOptions([
-                { label: 'Trabalho Honesto', description: 'Ganhos fixos, risco zero.', value: 'onesto' },
-                { label: 'Mundo do Crime', description: 'Alto risco, recompensa alta.', value: 'crime' },
-                { label: 'Hacker de Elite', description: 'Risco extremo, recompensa milionária.', value: 'hacker' }
+                { label: 'Cidadão Honesto', description: 'Trabalho normal, sem dores de cabeça.', value: 'cidadao', emoji: '👷' },
+                { label: 'Ladrão de Rua', description: 'Roubos rápidos e sujos na rua.', value: 'ladrao', emoji: '🥷' },
+                { label: 'Hacker', description: 'Crimes cibernéticos e invasões.', value: 'hacker', emoji: '💻' },
+                { label: 'Oficial de Polícia', description: 'Aplicar a lei e prender ladrões.', value: 'policial', emoji: '🚓' },
             ]);
 
-        await message.reply({ 
-            content: '# 💼 ESCOLHA SEU DESTINO\n**O contrato dura 3 dias. Escolha com sabedoria.**', 
-            components: [new ActionRowBuilder().addComponents(menu)] 
-        });
+        const row = new ActionRowBuilder().addComponents(menu);
+
+        await message.reply({ embeds: [embed], components: [row] });
     }
 };
