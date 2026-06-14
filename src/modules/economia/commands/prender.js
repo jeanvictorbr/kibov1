@@ -1,107 +1,103 @@
-import { EmbedBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
 
 export default {
     name: 'prender',
-    execute: async (message, args) => {
+    execute: async (message) => {
         const copId = message.author.id;
         const guildId = message.guild.id;
 
-        // 1. Verifica se quem executou é um Polícia no banco de dados
+        // 1. Verifica se o usuário é PM e se tem distintivo na cidade
         const copDb = await prisma.user.findUnique({ where: { userId: copId } });
         if (!copDb || copDb.currentJob !== 'policial') {
-            return message.reply('❌ Qual foi, chefe? Você não é Oficial de Polícia! Bate um papo com o Delegado lá no `k trabalhar`.');
+            return message.reply('🛑 Sai da frente, zé povinho! Você não é da polícia pra querer enquadrar os outros.');
         }
 
-        // 2. Verifica se ele tem o distintivo DESTA cidade (Jurisdição)
         const hasBadge = await prisma.policeBadge.findUnique({
             where: { userId_guildId: { userId: copId, guildId: guildId } }
         });
 
         if (!hasBadge) {
-            return message.reply('🛑 **Fora de Jurisdição, mano!** Seu distintivo não vale nessa quebrada. Fica no seu quadrado!');
+            return message.reply('🛑 **Fora de Jurisdição!** Você não tem distintivo neste servidor pra dar enquadro.');
         }
 
-        // 3. Verifica o Alvo
-        const targetUser = message.mentions.users.first();
-        if (!targetUser) return message.reply('🚓 Você precisa marcar quem vai tomar o enquadro! Ex: `k prender @suspeito`');
-        if (targetUser.id === copId) return message.reply('🤨 Tá querendo se prender, truta? Procura um psicólogo.');
-        if (targetUser.bot) return message.reply('🤖 Tá chapando? O Kibo não vai em cana não, chefe!');
-
-        const targetDb = await prisma.user.findUnique({ where: { userId: targetUser.id } });
-        
-        if (!targetDb || (targetDb.currentJob !== 'ladrao' && targetDb.currentJob !== 'hacker')) {
-            return message.reply('⚖️ **Abuso de Autoridade!** O mano é cidadão honesto (ou tá desempregado). Você só pode enquadrar Ladrão e Hacker.');
-        }
-
-        // 4. Verifica se o Polícia está em Cooldown (cansado)
+        // 2. Cooldown de cansaço (5 mins) caso ele tenha falhado num enquadro antes
         const copCooldown = await prisma.cooldown.findUnique({
-            where: { userId_command: { userId: copId, command: 'prender' } }
+            where: { userId_command: { userId: copId, command: 'cansaco_pm' } }
         });
 
         if (copCooldown && copCooldown.expiresAt > new Date()) {
             const minutos = Math.ceil((copCooldown.expiresAt - new Date()) / 60000);
-            return message.reply(`⏳ Cê tá cansado da última perseguição, chefe! Dá uma respirada na viatura por mais **${minutos} minutos**.`);
+            return message.reply(`🚓 Você tá exausto do último coringa que te deu fuga! Descansa a viatura por mais **${minutos} minutos** antes de dar outro bote.`);
         }
 
-        // 5. Verifica se o Alvo JÁ ESTÁ na prisão
-        const jailCooldown = await prisma.cooldown.findUnique({
+        // 3. Define o alvo
+        const targetUser = message.mentions.users.first();
+        if (!targetUser) {
+            return message.reply('🚓 Menciona aí quem você quer enquadrar! Ex: `k prender @user`');
+        }
+
+        if (targetUser.id === copId) {
+            return message.reply('🤨 Qual foi? Você tá tentando prender a si mesmo? Tá chapando!');
+        }
+
+        if (targetUser.bot) {
+            return message.reply('🤖 O Kibo não comete crimes, oficial. Procura um bandido de verdade!');
+        }
+
+        // 4. Verifica se o alvo é bandido
+        const robberDb = await prisma.user.findUnique({ where: { userId: targetUser.id } });
+        if (!robberDb || (robberDb.currentJob !== 'ladrao' && robberDb.currentJob !== 'hacker')) {
+            return message.reply(`❌ O <@${targetUser.id}> é trabalhador honesto (ou desempregado). Você não pode prender civil sem provas!`);
+        }
+
+        // Verifica se o bandido já tá preso
+        const isJailed = await prisma.cooldown.findUnique({
             where: { userId_command: { userId: targetUser.id, command: 'preso' } }
         });
 
-        if (jailCooldown && jailCooldown.expiresAt > new Date()) {
-            return message.reply('🔒 O mano já tá puxando pena em Alcatraz, deixa ele quieto lá!');
+        if (isJailed && isJailed.expiresAt > new Date()) {
+            return message.reply(`🕊️ O <@${targetUser.id}> já tá puxando cadeia em Alcatraz. Vai prender o cara duas vezes?`);
         }
 
-        // --- SISTEMA DE COMBATE (60% de chance de prender) ---
-        const chanceDeSucesso = Math.random() * 100;
+        // --- ROLETA DO ENQUADRO (60% da PM ganhar) ---
+        const chance = Math.random() * 100;
 
-        // Se o Polícia falhar na captura...
-        if (chanceDeSucesso > 60) {
-            // Polícia toma um cooldown de 5 minutos
-            const penaltyTime = new Date(Date.now() + 5 * 60 * 1000);
+        if (chance <= 60) {
+            // SUCESSO: PM ganhou
+            
+            // Calcula os 10% de confisco
+            const confisco = Math.floor(robberDb.balance * 0.10);
+            
+            // Prende por 30 minutos e transfere o dinheiro
+            const jailTime = new Date(Date.now() + 30 * 60 * 1000);
+            await prisma.$transaction([
+                prisma.cooldown.upsert({
+                    where: { userId_command: { userId: targetUser.id, command: 'preso' } },
+                    update: { expiresAt: jailTime },
+                    create: { userId: targetUser.id, command: 'preso', expiresAt: jailTime }
+                }),
+                prisma.user.update({
+                    where: { userId: targetUser.id },
+                    data: { balance: { decrement: confisco } }
+                }),
+                prisma.user.update({
+                    where: { userId: copId },
+                    data: { balance: { increment: confisco } }
+                })
+            ]);
+
+            return message.reply(`🚨 **BUSTEED! ENQUADRO PERFEITO!**\n\nO Oficial <@${copId}> botou a arma na cara do <@${targetUser.id}> no meio da rua!\n\n🔒 **Punição:** O vagabundo pegou 30 minutos de tranca em Alcatraz!\n💰 **Confisco:** O Oficial raspou **$${confisco.toLocaleString('pt-BR')}** (10%) da carteira do bandido e guardou no bolso!`);
+        } else {
+            // FALHA: Bandido deu fuga e PM cansa
+            
+            const restTime = new Date(Date.now() + 5 * 60 * 1000);
             await prisma.cooldown.upsert({
-                where: { userId_command: { userId: copId, command: 'prender' } },
-                update: { expiresAt: penaltyTime },
-                create: { userId: copId, command: 'prender', expiresAt: penaltyTime }
+                where: { userId_command: { userId: copId, command: 'cansaco_pm' } },
+                update: { expiresAt: restTime },
+                create: { userId: copId, command: 'cansaco_pm', expiresAt: restTime }
             });
 
-            return message.reply(`💨 **FUGA!** O <@${targetUser.id}> jogou a fumaça e meteu o pé pelo beco. Você comeu poeira na perseguição, mano!`);
+            return message.reply(`💨 **DEU RUIM! O CARA É LISO!**\n\nO Oficial <@${copId}> tentou dar o bote, mas o <@${targetUser.id}> pulou o muro, atravessou o beco e sumiu da visão!\n\n🚓 A polícia comeu poeira e vai precisar de **5 minutos** pra abastecer a viatura e tentar de novo.`);
         }
-
-        // --- SE O POLÍCIA GANHAR ---
-        
-        // Coloca o bandido na PRISÃO por 30 minutos
-        const jailTime = new Date(Date.now() + 30 * 60 * 1000);
-        await prisma.cooldown.upsert({
-            where: { userId_command: { userId: targetUser.id, command: 'preso' } },
-            update: { expiresAt: jailTime },
-            create: { userId: targetUser.id, command: 'preso', expiresAt: jailTime }
-        });
-
-        // Confisca o dinheiro (10% da carteira do alvo vai para o Polícia)
-        let confisco = 0;
-        if (targetDb.balance > 0) {
-            confisco = Math.floor(targetDb.balance * 0.10); // 10%
-
-            // Tira do bandido e dá ao Polícia numa única tacada de banco
-            await prisma.$transaction([
-                prisma.user.update({ where: { userId: targetUser.id }, data: { balance: { decrement: confisco } } }),
-                prisma.user.update({ where: { userId: copId }, data: { balance: { increment: confisco } } })
-            ]);
-        }
-
-        // Mensagem Épica de Captura
-        const embed = new EmbedBuilder()
-            .setTitle('🚨 BUSTED! PERDEU, PLAYBOY! 🚨')
-            .setDescription(`O Oficial <@${copId}> deu o bote e jogou o criminoso <@${targetUser.id}> no camburão!`)
-            .setColor('#0000FF')
-            .addFields(
-                { name: 'Sentença', value: '🔒 30 Minutos em Alcatraz', inline: true },
-                { name: 'Dinheiro Apreendido', value: `💰 $${confisco.toLocaleString('pt-BR')}`, inline: true }
-            )
-            .setThumbnail(targetUser.displayAvatarURL());
-
-        return message.reply({ embeds: [embed] });
     }
 };

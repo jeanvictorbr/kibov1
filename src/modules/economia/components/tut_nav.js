@@ -1,6 +1,25 @@
+import { MessageFlags } from 'discord.js';
+
 export default {
     customId: 'tut_nav',
     execute: async (interaction) => {
+        
+        // 🔒 TRAVA DE SEGURANÇA: Só quem chamou o comando pode clicar
+        const reference = interaction.message.reference;
+        if (reference) {
+            try {
+                const originalMsg = await interaction.channel.messages.fetch(reference.messageId);
+                if (interaction.user.id !== originalMsg.author.id) {
+                    return interaction.reply({ 
+                        content: '🛑 Tá moscando, curioso? Esse manual foi aberto por outra pessoa. Digita `k tutorial` no chat pra você abrir o seu!', 
+                        flags: [MessageFlags.Ephemeral] 
+                    });
+                }
+            } catch (e) {
+                // Se a mensagem original foi apagada, segue o baile
+            }
+        }
+
         const escolha = interaction.values[0];
         let texto = '';
 
