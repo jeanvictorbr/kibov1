@@ -11,7 +11,7 @@ export default {
             .addFields(
                 { 
                     name: '💼 TRABALHOS, CRIMES & RPG', 
-                    value: '`k trabalhar` - Escolha sua profissão.\n`k executar` - Trabalha e ganha dinheiro.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore sua Sorte e Lábia na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
+                    value: '`k trabalhar` - Escolha sua profissão.\n`k tutorial` - Aprenda tudo sobre o bot.\n`k executar` - Trabalha e ganha dinheiro.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore sua Sorte e Lábia na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
                     inline: false 
                 },
                 { 
