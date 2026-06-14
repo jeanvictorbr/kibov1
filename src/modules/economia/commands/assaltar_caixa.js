@@ -5,7 +5,7 @@ import { gerarCanvasAssalto } from '../../../utils/canvasAssalto.js';
 if (!global.activeRobberies) global.activeRobberies = new Map();
 
 // 👑 SEU ID AQUI (Sem cooldown)
-const DEV_ID = 'SEU_ID_AQUI'; 
+const DEV_ID = '1070658145740926987'; 
 
 export default {
     name: 'assaltar_caixa',
