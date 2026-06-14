@@ -5,13 +5,18 @@ export default {
     execute: async (message) => {
         const embed = new EmbedBuilder()
             .setTitle('📖 MANUAL DO IMPÉRIO KIBO')
-            .setDescription('Bem-vindo à central de ajuda, chefe! Aqui estão todos os comandos para você dominar a economia e o submundo do servidor.')
+            .setDescription('Bem-vindo à central de ajuda, chefe! Aqui estão todos os comandos para você dominar a economia e o submundo do servidor.\n\n🚨 **TÁ PERDIDO NA CIDADE?**\nDigite **`k tutorial`** para abrir o **Guia Definitivo e Interativo** com a explicação completa de cada sistema, tempos de espera e chances de prisão!')
             .setColor('#FFD700') // Dourado Premium
             .setThumbnail(message.client.user.displayAvatarURL())
             .addFields(
                 { 
-                    name: '💼 TRABALHOS, CRIMES & RPG', 
-                    value: '`k trabalhar` - Escolha sua profissão.\n`k tutorial` - Aprenda tudo sobre o bot.\n`k executar` - Trabalha e ganha dinheiro.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore sua Sorte e Lábia na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
+                    name: '💼 TRABALHOS & RPG', 
+                    value: '`k trabalhar` - Escolha sua profissão.\n`k executar` - Trabalha e ganha dinheiro.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore sua Sorte e Lábia na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
+                    inline: false 
+                },
+                { 
+                    name: '🔫 POLÍCIA & LADRÃO (NOVO)', 
+                    value: '`k assaltar_caixa` - Tenta estourar um caixa (Requer ser Ladrão).\n`k prender @user` - Dá um enquadro num criminoso (Requer ser PM).\n`k fuga` - Tenta serrar as grades de Alcatraz.\n`k subornar @PM [valor]` - Oferece grana pro PM pra sair da cadeia.', 
                     inline: false 
                 },
                 { 
@@ -21,12 +26,12 @@ export default {
                 },
                 { 
                     name: '🛒 ITENS & IMPÉRIO', 
-                    value: '`k loja` - Compre vantagens (Colete, Pé de Cabra, etc).\n`k comprar [item]` - Adquire um item da loja.\n`k usar` - Abre seu inventário para ativar itens.\n`k mercado` - Compre empresas exclusivas do sistema.\n`k empresas` - Gerencie lucros, falências ou venda negócios.\n`k mercadonegro` - Compre empresas inflacionadas de jogadores.', 
+                    value: '`k loja` - Compre vantagens (Colete, Pé de Cabra, etc).\n`k comprar [item]` - Adquire um item da loja.\n`k usar` - Abre seu inventário para ativar itens.\n`k empresas` - Compre, gerencie lucros e venda negócios.\n`k mercado` - Mercado livre de itens entre jogadores.\n`k mercadonegro` - Compre equipamentos ilícitos e empresas restritas.', 
                     inline: false 
                 },
                 { 
                     name: '🎰 CASSINO & APOSTAS', 
-                    value: '`k tigrinho` - Fortune Tiger Kibo HD! Rode as roletas e fature.\n`k mines [aposta] [minas]` - Encontre diamantes e fuja das bombas.\n`k crash [valor]` - Pare o multiplicador antes que o gráfico exploda.\n`k coinflip @user [valor]` - Aposte 50/50 na moeda contra outro jogador.', 
+                    value: '`k tigrinho [valor]` - Fortune Tiger Kibo HD! Rode as roletas e fature.\n`k mines [aposta] [minas]` - Encontre diamantes e fuja das bombas.\n`k crash [valor]` - Pare o multiplicador antes que o gráfico exploda.\n`k coinflip @user [valor]` - Aposte 50/50 na moeda contra outro jogador.', 
                     inline: false 
                 },
                 { 
@@ -36,7 +41,7 @@ export default {
                 },
                 { 
                     name: '🎭 INTERAÇÃO SOCIAL', 
-                    value: '`k bio` - Altere a mensagem de status do seu perfil.\n`k abracar @user` - Dê um abraço apertado.\n`k beijar @user` - Roube um beijo.\n`k socar @user` - Dê um direto na cara.\n`k chutar @user` - Um bico ninja.\n`k morder @user` - Mordida feroz.\n`k dancar @user` - Passinho sincronizado.', 
+                    value: '`k bio [texto]` - Altere a mensagem de status do seu perfil.\n`k abracar @user` - Dê um abraço apertado.\n`k beijar @user` - Roube um beijo.\n`k socar @user` - Dê um direto na cara.\n`k chutar @user` - Um bico ninja.\n`k morder @user` - Mordida feroz.\n`k dancar @user` - Passinho sincronizado.', 
                     inline: false 
                 }
             )

@@ -5,20 +5,21 @@ export default {
     execute: async (message) => {
         const menu = new StringSelectMenuBuilder()
             .setCustomId('tut_nav')
-            .setPlaceholder('Escolhe o manual aí, chefe...')
+            .setPlaceholder('Abre o manual da quebrada...')
             .addOptions([
-                { label: 'Economia & Banco', description: 'Como guardar grana, fazer Pix e ver o Top.', value: 'banco', emoji: '💰' },
-                { label: 'Empregos & Trampos', description: 'Profissões, Cidadão, Hacker, PM.', value: 'trampos', emoji: '🏢' },
-                { label: 'Guerra de Rua (Polícia x Ladrão)', description: 'Assaltos, Fuga, Prisão e Suborno.', value: 'guerra', emoji: '🔫' },
-                { label: 'Cassino Clandestino', description: 'Tigrinho, Crash, Mines, Coinflip e Airdrop.', value: 'cassino', emoji: '🎰' },
-                { label: 'Lojas & Empresas', description: 'Mercado Negro, Compras e Renda Passiva.', value: 'lojas', emoji: '🛒' },
-                { label: 'Perfil & Social', description: 'Skills, Bio e Interações com os manos.', value: 'social', emoji: '🫂' },
-                { label: 'Vantagens VIP', description: 'Privilégios de quem banca o servidor.', value: 'vip', emoji: '💎' },
+                { label: 'O Básico (Economia & Banco)', description: 'Como não ser roubado e guardar sua grana.', value: 'banco', emoji: '💰' },
+                { label: 'Trampos de Rua (k executar)', description: 'Como funcionam os empregos e os riscos.', value: 'trampos', emoji: '🏢' },
+                { label: 'A Vida do Crime (Ladrão)', description: 'Assalto pesadão, Alcatraz, Fuga e Suborno.', value: 'crime', emoji: '🥷' },
+                { label: 'A Lei e a Ordem (Polícia)', description: 'Como dar o enquadro e prender vagabundo.', value: 'policia', emoji: '🚓' },
+                { label: 'Cassino Clandestino', description: 'Tigrinho, Crash, Mines e Coinflip.', value: 'cassino', emoji: '🎰' },
+                { label: 'Mercado e Empresas', description: 'Como gerar dinheiro enquanto dorme.', value: 'lojas', emoji: '🛒' },
+                { label: 'Respeito na Rua (Social)', description: 'Habilidades, Perfil e ações com os manos.', value: 'social', emoji: '🫂' },
+                { label: 'Vantagens do VIP', description: 'Privilégios de quem banca o morro.', value: 'vip', emoji: '💎' },
             ]);
 
         const row = new ActionRowBuilder().addComponents(menu);
 
-        const texto = `📚 **MANUAL DE SOBREVIVÊNCIA DO KIBO**\n\nVisão, rapaziada! Tá perdido na cidade e não sabe como fazer dinheiro ou como os sistemas funcionam? Aqui é o guia completo pra você não ser passado pra trás.\n\n👇 **Abre o menu aí embaixo e escolhe qual fita você quer aprender!**`;
+        const texto = `📚 **MANUAL DE SOBREVIVÊNCIA DO KIBO**\n\nVisão, rapaziada! Tá pisando na cidade agora e não quer ser passado pra trás? Presta atenção nas regras do jogo. Aqui tem tudo que você precisa saber sobre o dinheiro, o crime e a lei.\n\n👇 **Abre o menu aí embaixo e estuda o sistema!**`;
 
         await message.reply({ content: texto, components: [row] });
     }
