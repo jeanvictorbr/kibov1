@@ -4,8 +4,8 @@ import { gerarCanvasCarroForte } from '../../../utils/canvasCarroForte.js';
 
 if (!global.activeCarroForte) global.activeCarroForte = new Map();
 
-// 👑 SEU ID DE DEV AQUI (Sem cooldown)
-const DEV_ID = 'SEU_ID_AQUI'; 
+// 👑 SEU ID DE DEV AQUI (Sem cooldown e não gasta C4)
+const DEV_ID = '1070658145740926987'; 
 
 export default {
     name: 'carroforte',
@@ -19,8 +19,22 @@ export default {
             return message.reply('❌ Você tá de brincadeira? Roubar Carro Forte é trampo pra `Ladrão` de alta periculosidade!');
         }
 
-        // COOLDOWN: 30m Normal, 5m VIP, 0m DEV
         const isDev = userId === DEV_ID;
+
+        // --- 💣 TRAVA DO EQUIPAMENTO (C4) ---
+        // Aqui ele busca no inventário se o cara tem o item "c4"
+        let c4Item = null;
+        if (!isDev) {
+            c4Item = await prisma.inventory.findFirst({
+                where: { userId: userId, itemId: 'c4' } // Ajuste 'itemId' pro nome exato do seu banco, se precisar
+            });
+
+            if (!c4Item || c4Item.amount < 1) { // Ajuste 'amount' pra 'quantidade' se for o caso no seu banco
+                return message.reply('❌ **Faltou o equipamento pesado!** Você acha que a porta do blindado abre no soco? Passa no `k mercadonegro` e compra uma **C4** antes de tentar a sorte.');
+            }
+        }
+
+        // --- ⏳ TRAVA DE COOLDOWN ---
         const isVip = userDb.isPremium;
         const cooldownMinutes = isVip ? 5 : 30; 
         const cooldownMs = cooldownMinutes * 60 * 1000;
@@ -32,14 +46,22 @@ export default {
                 return message.reply(`⏳ A Tropa de Choque ainda tá na rua caçando sua cabeça! Fica entocado por mais **${minutos} minutos**.`);
             }
 
+            // Aplica o cooldown
             const nextTime = new Date(Date.now() + cooldownMs);
             await prisma.cooldown.upsert({
                 where: { userId_command: { userId, command: 'carroforte' } },
                 update: { expiresAt: nextTime },
                 create: { userId, command: 'carroforte', expiresAt: nextTime }
             });
+
+            // 💣 DESCONTA A C4 DO INVENTÁRIO DO LADRÃO
+            await prisma.inventory.update({
+                where: { id: c4Item.id },
+                data: { amount: { decrement: 1 } }
+            });
         }
 
+        // --- 🚀 INICIA O ASSALTO ---
         const avatarUrl = message.author.displayAvatarURL({ extension: 'png', size: 256 });
         const canvasBuffer = await gerarCanvasCarroForte(avatarUrl, 'inicio');
         const attachment = new AttachmentBuilder(canvasBuffer, { name: 'cf.png' });
@@ -55,7 +77,7 @@ export default {
                 .setStyle(ButtonStyle.Danger)
         );
 
-        const textoInicial = `🚨 **ALERTA MÁXIMO: CARRO FORTE DA BRINK'S SOB ATAQUE!**\n\nO louco do <@${userId}> jogou uma van na frente do blindado na rodovia principal e colou C4 nas portas!\n\n**O cofre abre em 3 MINUTOS!**\nLadrões, entrem no bonde pra dar cobertura! Polícia, interceptem agora!\n@here`;
+        const textoInicial = `🚨 **ALERTA MÁXIMO: CARRO FORTE DA BRINK'S SOB ATAQUE!**\n\nO louco do <@${userId}> jogou uma van na frente do blindado na rodovia principal e armou a **C4** nas portas!\n\n**O cofre abre em 3 MINUTOS!**\nLadrões, entrem no bonde pra dar cobertura! Polícia, interceptem agora!\n@here`;
 
         const msg = await message.channel.send({ content: textoInicial, files: [attachment], components: [row] });
 
@@ -63,7 +85,7 @@ export default {
         global.activeCarroForte.set(msg.id, {
             leaderId: userId,
             guildId: guildId,
-            crew: [userId], // O líder já tá no bonde
+            crew: [userId], 
             avatarUrl: avatarUrl,
             intervalId: null
         });
@@ -90,7 +112,7 @@ export default {
                 // FASE 2
                 const hist = [
                     "💥 Os guardas abriram uma fresta e tão atirando de lá de dentro! O bonde tá trocando tiro pesado!",
-                    "⏳ O pavio da C4 foi aceso! O cofre tá começando a derreter. Falta muito pouco!"
+                    "⏳ O pavio da C4 tá no limite! O cofre tá começando a derreter. Falta muito pouco!"
                 ];
                 const canvasF2 = await gerarCanvasCarroForte(avatarUrl, 'min2');
                 const attF2 = new AttachmentBuilder(canvasF2, { name: 'cf.png' });
@@ -117,13 +139,12 @@ export default {
                 const attSuc = new AttachmentBuilder(canvasSuc, { name: 'cf.png' });
                 
                 let mensoes = data.crew.map(id => `<@${id}>`).join(', ');
-                const textoFinal = `💰 **BOOOM! A PORTA VOOU A 50 METROS!**\n\nA polícia comeu poeira! O bonde invadiu o blindado e limpou as prateleiras de dinheiro!\n\n💸 **Loot Total:** $${lootTotal.toLocaleString('pt-BR')}\n🔥 **Sobreviventes:** ${mensoes}\n*(Cada um levou $${lootPorPessoa.toLocaleString('pt-BR')} pra casa!)*`;
+                const textoFinal = `💰 **BOOOM! A PORTA VOOU A 50 METROS!**\n\nA polícia comeu poeira! A C4 estourou o blindado e o bonde limpou as prateleiras de dinheiro!\n\n💸 **Loot Total:** $${lootTotal.toLocaleString('pt-BR')}\n🔥 **Sobreviventes:** ${mensoes}\n*(Cada um levou $${lootPorPessoa.toLocaleString('pt-BR')} pra casa!)*`;
 
                 await msg.edit({ content: textoFinal, files: [attSuc], components: [] }).catch(()=>{});
             }
         }, 60000); // Roda a cada 60 segundos
 
-        // Salva o ID do loop pra gente poder cancelar se a PM matar todo mundo
         global.activeCarroForte.get(msg.id).intervalId = loop;
     }
 };
