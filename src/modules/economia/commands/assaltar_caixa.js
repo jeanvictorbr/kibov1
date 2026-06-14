@@ -1,7 +1,8 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
+import { createEmbed } from '../../../utils/embedBuilder.js';
+import { gerarCanvasAssalto } from '../../../utils/canvasAssalto.js';
 
-// Memória RAM para guardar os assaltos em andamento
 if (!global.activeRobberies) global.activeRobberies = new Map();
 
 export default {
@@ -10,23 +11,17 @@ export default {
         const userId = message.author.id;
         const guildId = message.guild.id;
 
-        // 1. Verifica se é Ladrão
         const userDb = await prisma.user.findUnique({ where: { userId } });
         if (!userDb || userDb.currentJob !== 'ladrao') {
-            return message.reply('❌ Você não tem a manha do crime, chefe. Só quem é `Ladrão` de carteira assinada no submundo sabe estourar um caixa!');
+            return message.reply('❌ Você não tem a manha do crime, chefe. Só quem é `Ladrão` de carteira assinada estoura caixa!');
         }
 
-        // 2. Verifica Cooldown (1 hora)
-        const cooldownDb = await prisma.cooldown.findUnique({
-            where: { userId_command: { userId, command: 'assaltar_caixa' } }
-        });
-
+        const cooldownDb = await prisma.cooldown.findUnique({ where: { userId_command: { userId, command: 'assaltar_caixa' } } });
         if (cooldownDb && cooldownDb.expiresAt > new Date()) {
             const minutos = Math.ceil((cooldownDb.expiresAt - new Date()) / 60000);
-            return message.reply(`⏳ A poeira ainda não baixou da última explosão! Fica na miúda por mais **${minutos} minutos** pra polícia não te rastrear.`);
+            return message.reply(`⏳ A poeira ainda não baixou da última explosão! Fica na miúda por mais **${minutos} minutos**.`);
         }
 
-        // Aplica o Cooldown de 1 hora
         const nextTime = new Date(Date.now() + 60 * 60 * 1000);
         await prisma.cooldown.upsert({
             where: { userId_command: { userId, command: 'assaltar_caixa' } },
@@ -34,13 +29,30 @@ export default {
             create: { userId, command: 'assaltar_caixa', expiresAt: nextTime }
         });
 
-        const lucro = Math.floor(Math.random() * (150000 - 50000 + 1)) + 50000; // Entre 50k e 150k
+        const lucro = Math.floor(Math.random() * (150000 - 50000 + 1)) + 50000;
 
-        const embed = new EmbedBuilder()
-            .setTitle('🚨 ALERTA 190: ASSALTO EM ANDAMENTO!')
-            .setDescription(`O <@${userId}> plantou o C4 no Caixa Eletrônico da Koda Tech e está esperando estourar para levar **$${lucro.toLocaleString('pt-BR')}**!\n\n**🚓 A polícia tem 2 MINUTOS para chegar na cena e impedir o crime!**`)
-            .setColor('#FF8C00')
-            .setImage('https://i.imgur.com/8Qe8g2G.png'); // Pode trocar por um gif de explosão
+        // Variações para nunca ser o mesmo texto de início
+        const inicios = [
+            `O bagulho ficou doido! O <@${userId}> meteu a furadeira no Caixa Eletrônico da Koda Tech!`,
+            `Visão, rapaziada! O <@${userId}> amarrou o cabo de aço no caixa e tá acelerando a caminhonete!`,
+            `Chama o BOPE! O <@${userId}> colou C4 no caixa eletrônico e tá com o detonador na mão!`,
+            `O cara tá de maçarico no meio da rua! O <@${userId}> tá derretendo o cofre do banco!`,
+            `Ousadia pura! O <@${userId}> hackeou o sistema do caixa eletrônico e ele tá cuspindo nota!`
+        ];
+        const historiaInicio = inicios[Math.floor(Math.random() * inicios.length)];
+
+        // Geração do CANVAS lindão
+        const avatarUrl = message.author.displayAvatarURL({ extension: 'png', size: 256 });
+        const canvasBuffer = await gerarCanvasAssalto(avatarUrl, 'andamento', lucro);
+        const attachment = new AttachmentBuilder(canvasBuffer, { name: 'assalto.png' });
+
+        // Usando o seu EmbedBuilder interno (Flag V2)
+        const embed = createEmbed({
+            title: '🚨 ALERTA 190: O CRIME TÁ ROLANDO!',
+            description: `${historiaInicio}\n\n**🚓 A Polícia tem 2 MINUTOS pra chegar na cena e impedir o crime!**`,
+            color: '#FF8C00'
+        });
+        embed.setImage('attachment://assalto.png');
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -49,21 +61,20 @@ export default {
                 .setStyle(ButtonStyle.Danger)
         );
 
-        const assaltoMsg = await message.channel.send({ content: '@here 🚨 **Atenção Unidades!**', embeds: [embed], components: [row] });
+        const assaltoMsg = await message.channel.send({ content: '@here 🚨 **Atenção Unidades!**', embeds: [embed], files: [attachment], components: [row] });
 
-        // Salva na memória do bot
         global.activeRobberies.set(assaltoMsg.id, {
             robberId: userId,
             guildId: guildId,
-            loot: lucro
+            loot: lucro,
+            avatarUrl: avatarUrl
         });
 
-        // O Temporizador de 2 Minutos (Se a polícia não aparecer, o ladrão ganha)
+        // Temporizador do Ladrão Ganhando
         setTimeout(async () => {
             const robberyData = global.activeRobberies.get(assaltoMsg.id);
-            if (!robberyData) return; // Se a polícia já clicou, a memória foi apagada, então não faz nada.
+            if (!robberyData) return;
 
-            // Ninguém clicou, o Ladrão ganhou!
             global.activeRobberies.delete(assaltoMsg.id);
 
             await prisma.user.update({
@@ -71,13 +82,18 @@ export default {
                 data: { balance: { increment: robberyData.loot } }
             });
 
-            const embedSucesso = new EmbedBuilder()
-                .setTitle('💥 CAIXA ESTOURADO COM SUCESSO!')
-                .setDescription(`Papo reto, a polícia comeu poeira! O <@${robberyData.robberId}> estourou o caixa e meteu o pé.\n\n💰 **Lucro Limpo:** $${robberyData.loot.toLocaleString('pt-BR')} pra conta do crime!`)
-                .setColor('#00FF66');
+            // Geração do Canvas de Fuga (Verde)
+            const canvasFugaBuffer = await gerarCanvasAssalto(robberyData.avatarUrl, 'fuga', robberyData.loot);
+            const attachmentFuga = new AttachmentBuilder(canvasFugaBuffer, { name: 'fuga.png' });
 
-            await assaltoMsg.edit({ content: '💸 O crime compensou desta vez!', embeds: [embedSucesso], components: [] }).catch(()=>{});
+            const embedFuga = createEmbed({
+                title: '💥 CAIXA ESTOURADO COM SUCESSO!',
+                description: `Papo reto, a polícia comeu poeira! O <@${robberyData.robberId}> meteu o pé.\n\n💰 **Lucro Limpo:** $${robberyData.loot.toLocaleString('pt-BR')} pra conta do crime!`,
+                color: '#00FF66'
+            });
+            embedFuga.setImage('attachment://fuga.png');
 
-        }, 120000); // 120.000 ms = 2 minutos
+            await assaltoMsg.edit({ content: '💸 O crime compensou desta vez!', embeds: [embedFuga], files: [attachmentFuga], components: [] }).catch(()=>{});
+        }, 120000);
     }
 };

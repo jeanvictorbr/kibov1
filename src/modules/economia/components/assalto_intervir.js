@@ -1,5 +1,7 @@
-import { EmbedBuilder, MessageFlags } from 'discord.js';
+import { AttachmentBuilder, MessageFlags } from 'discord.js';
 import { prisma } from '../../../core/database.js';
+import { createEmbed } from '../../../utils/embedBuilder.js';
+import { gerarCanvasAssalto } from '../../../utils/canvasAssalto.js';
 
 export default {
     customId: 'assalto_intervir',
@@ -37,6 +39,9 @@ export default {
 
         const robberId = robberyData.robberId;
         const loot = robberyData.loot;
+        
+        // Pega a foto do meliante pra estampar no jornal do Canvas (Garante que a foto exista)
+        const avatarUrl = robberyData.avatarUrl || (await interaction.client.users.fetch(robberId)).displayAvatarURL({ extension: 'png', size: 256 });
 
         // --- ROLETA DO CONFRONTO (50% / 50%) ---
         const chance = Math.random() * 100;
@@ -79,6 +84,9 @@ export default {
             { title: '📻 RÁDIO QUEBRADO!', desc: `Sorte de malandro! Bem na hora que o <@${copId}> ia pedir reforço pra fechar o cerco, o rádio da PM ficou mudo. O <@${robberId}> aproveitou a brecha e meteu o pé.` }
         ];
 
+        // Tira a foto de "Em Andamento" da mensagem pra não estourar o visual do embed novo
+        await interaction.message.removeAttachments().catch(()=> {});
+
         if (chance <= 50) {
             // --- A POLÍCIA GANHOU O TIROTEIO ---
             
@@ -97,16 +105,22 @@ export default {
                 data: { balance: { increment: copReward } }
             });
 
+            // Cria o novo Canvas com fundo vermelho (BUSTED)
+            const canvasPreso = await gerarCanvasAssalto(avatarUrl, 'preso', loot);
+            const attachPreso = new AttachmentBuilder(canvasPreso, { name: 'resultado_preso.png' });
+
             // Sorteia a história de vitória da polícia
             const historiaSorteada = copWins[Math.floor(Math.random() * copWins.length)];
 
-            const embedVitoria = new EmbedBuilder()
-                .setTitle(historiaSorteada.title)
-                .setDescription(`${historiaSorteada.desc}\n\n🔒 **O vagabundo rodou e pegou 30 minutos em Alcatraz!**\n💰 **O Oficial faturou $${copReward.toLocaleString('pt-BR')} pelo serviço!**`)
-                .setColor('#0000FF')
-                .setThumbnail('https://i.imgur.com/kO1p5z0.png');
+            // Cria o Embed V2 nativo do seu bot
+            const embedVitoria = createEmbed({
+                title: historiaSorteada.title,
+                description: `${historiaSorteada.desc}\n\n🔒 **O vagabundo rodou e pegou 30 minutos em Alcatraz!**\n💰 **O Oficial faturou $${copReward.toLocaleString('pt-BR')} pelo serviço!**`,
+                color: '#FF0000'
+            });
+            embedVitoria.setImage('attachment://resultado_preso.png');
 
-            await interaction.update({ embeds: [embedVitoria], components: [] });
+            await interaction.update({ embeds: [embedVitoria], files: [attachPreso], components: [] });
 
         } else {
             // --- O LADRÃO GANHOU O TIROTEIO E FUGIU ---
@@ -116,16 +130,22 @@ export default {
                 data: { balance: { increment: loot } }
             });
 
+            // Cria o novo Canvas com fundo verde (FUGA SUCEDIDA)
+            const canvasFuga = await gerarCanvasAssalto(avatarUrl, 'fuga', loot);
+            const attachFuga = new AttachmentBuilder(canvasFuga, { name: 'resultado_fuga.png' });
+
             // Sorteia a história de fuga do ladrão
             const historiaSorteada = robberWins[Math.floor(Math.random() * robberWins.length)];
 
-            const embedFuga = new EmbedBuilder()
-                .setTitle(historiaSorteada.title)
-                .setDescription(`${historiaSorteada.desc}\n\n💸 **O Ladrão embolsou os $${loot.toLocaleString('pt-BR')} do caixa!**\n🤕 **A Polícia ficou só na saudade!**`)
-                .setColor('#FF0000')
-                .setThumbnail('https://i.imgur.com/8Qe8g2G.png');
+            // Cria o Embed V2 nativo do seu bot
+            const embedFuga = createEmbed({
+                title: historiaSorteada.title,
+                description: `${historiaSorteada.desc}\n\n💸 **O Ladrão embolsou os $${loot.toLocaleString('pt-BR')} do caixa!**\n🤕 **A Polícia ficou só na saudade!**`,
+                color: '#00FF66'
+            });
+            embedFuga.setImage('attachment://resultado_fuga.png');
 
-            await interaction.update({ embeds: [embedFuga], components: [] });
+            await interaction.update({ embeds: [embedFuga], files: [attachFuga], components: [] });
         }
     }
 };
