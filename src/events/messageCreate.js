@@ -11,8 +11,8 @@ export default {
 
         const content = message.content.trim();
         
-        // Esta Regex aceita "ksocar" ou "k socar" (o \s* torna o espaço opcional)
-        const prefixRegex = /^k\s*([a-zA-Z]+)(.*)/i; 
+        // 🛠️ CORREÇÃO AQUI: Agora aceita comandos com underline (_)
+        const prefixRegex = /^k\s*([a-zA-Z_]+)(.*)/i; 
         const match = content.match(prefixRegex);
         
         if (!match) return; 
@@ -31,21 +31,18 @@ export default {
         }
 
         // 🚨 SISTEMA DE PRISÃO (ALCATRAZ) 🚨
-        // Se o maluco rodou pra polícia, ele fica trancado e não usa comandos!
-  // 🚨 SISTEMA DE PRISÃO (ALCATRAZ) 🚨
         const jailCooldown = await prisma.cooldown.findUnique({
             where: { userId_command: { userId: message.author.id, command: 'preso' } }
         });
 
         if (jailCooldown && jailCooldown.expiresAt > new Date()) {
-            // A ÚNICA COISA QUE ELE PODE FAZER É TENTAR FUGIR!
-            if (commandName !== 'fuga') {
+            if (commandName !== 'fuga' && commandName !== 'subornar') {
                 const minutosRestantes = Math.ceil((jailCooldown.expiresAt - new Date()) / 60000);
-                return message.reply(`🚓 **A casa caiu, chefe!** Você tá puxando cadeia em Alcatraz e não pode fazer nada na rua.\nLança um \`k fuga\` se tiver coragem de tentar escapar, ou mofa aí por mais **${minutosRestantes} minutos**!`);
+                return message.reply(`🚓 **A casa caiu, chefe!** Você tá puxando cadeia em Alcatraz e não pode fazer nada na rua.\nManda um \`k fuga\` se tiver coragem de tentar escapar, desenrola um \`k subornar @policial\` ou mofa aí por mais **${minutosRestantes} minutos**!`);
             }
         }
 
-        // Captura de Alvo Inteligente (Por Menção ou por Resposta de Chat)
+        // Captura de Alvo Inteligente
         let targetUser = message.mentions.users.first();
         if (!targetUser && message.reference) {
             try {

@@ -6,23 +6,20 @@ export default {
         const guildId = message.guild.id;
         const authorId = message.author.id;
 
-        // 1. O Bot descobre quem é o Delegado de verdade
         const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
         const delegadoId = guildConfig?.delegadoId || message.guild.ownerId;
 
-        // 2. Barreira de Segurança
         if (authorId !== delegadoId) {
-            return message.reply(`❌ **Acesso Negado!** Você não é o Delegado desta cidade. Apenas o <@${delegadoId}> pode distribuir distintivos.`);
+            return message.reply(`❌ **Acesso Negado!** Você não é o Delegado dessa quebrada. Só o <@${delegadoId}> pode liberar o distintivo.`);
         }
 
         const targetUser = message.mentions.users.first();
         if (!targetUser) {
-            return message.reply('🚓 Mencione quem você quer contratar para a força policial! Ex: `k contratar @user`');
+            return message.reply('🚓 Menciona aí quem você quer chamar pra polícia! Ex: `k contratar @user`');
         }
 
-        if (targetUser.bot) return message.reply('🤖 Robôs não podem segurar armas. Contrate um jogador de verdade!');
+        if (targetUser.bot) return message.reply('🤖 Robô não segura fuzil, chefe. Contrata um jogador de verdade!');
 
-        // 3. Tenta dar o Distintivo
         try {
             await prisma.policeBadge.create({
                 data: {
@@ -30,10 +27,9 @@ export default {
                     guildId: guildId
                 }
             });
-            message.reply(`🚨 **BEM-VINDO À FORÇA!** O <@${targetUser.id}> acabou de receber o distintivo da cidade. Ele já pode assumir o cargo de Policial no \`k trabalhar\`.`);
+            message.reply(`🚨 **BEM-VINDO À FORÇA!** O <@${targetUser.id}> acabou de ganhar o distintivo da cidade. Ele já pode colar no \`k trabalhar\` e pegar a farda.`);
         } catch (error) {
-            // Como usamos @@unique no banco, se der erro é porque ele já é polícia
-            message.reply(`⚠️ O <@${targetUser.id}> já é um Oficial da Polícia neste servidor!`);
+            message.reply(`⚠️ O mano <@${targetUser.id}> já é Oficial da PM nesse servidor. O cara já tá na rua patrulhando!`);
         }
     }
 };

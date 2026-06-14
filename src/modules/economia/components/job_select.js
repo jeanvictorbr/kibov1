@@ -12,7 +12,7 @@ export default {
         if (selectedJob === 'policial') {
             const hasBadge = await prisma.policeBadge.findUnique({
                 where: {
-                    userId_guildId: { userId, guildId } // Garante que é polícia AQUI
+                    userId_guildId: { userId, guildId } 
                 }
             });
 
@@ -21,25 +21,25 @@ export default {
                 const delegadoId = guildConfig?.delegadoId || interaction.guild.ownerId;
 
                 return interaction.reply({
-                    content: `❌ **CRACHÁ REJEITADO!** Tu não tens o distintivo desta cidade para seres Polícia.\nQuer entrar para a força? Procura o Delegado <@${delegadoId}> e pede a ele o distintivo!`,
+                    content: `❌ **CRACHÁ REJEITADO!** Você não tem o distintivo dessa cidade, mano.\nQuer entrar pra força? Dá um salve no Delegado <@${delegadoId}> e pede pra ele te contratar!`,
                     flags: [MessageFlags.Ephemeral]
                 });
             }
         }
 
         // SALVA A PROFISSÃO NO BANCO DE DADOS
-        // (Garante que a conta do cara existe, se não existir, ele cria)
-await prisma.user.upsert({
+        await prisma.user.upsert({
             where: { userId: userId },
-            update: { currentJob: selectedJob }, // Mudou para currentJob
+            update: { currentJob: selectedJob }, 
             create: { userId: userId, currentJob: selectedJob }
         });
-        // MENSAGENS PERSONALIZADAS DE ACORDO COM A PROFISSÃO
+
+        // MENSAGENS NA GÍRIA SP
         let responseMsg = '';
-        if (selectedJob === 'policial') responseMsg = '🚓 **Distintivo validado!** Tu agora és um Oficial de Polícia. Mantém esta cidade limpa!';
-        else if (selectedJob === 'ladrao') responseMsg = '🥷 **Bem-vindo ao Submundo.** Tu agora és um Ladrão. Prepara as ferramentas e tem cuidado com a Polícia.';
-        else if (selectedJob === 'hacker') responseMsg = '💻 **Sistema invadido.** Tu és um Hacker. Não te esqueças de limpar os teus rastos digitais.';
-        else responseMsg = '👷 **Contrato assinado!** És um Cidadão Honesto. Trabalha duro e paga os teus impostos.';
+        if (selectedJob === 'policial') responseMsg = '🚓 **Distintivo validado!** Agora você é um Oficial da PM. Mantém a quebrada limpa, chefe!';
+        else if (selectedJob === 'ladrao') responseMsg = '🥷 **Bem-vindo ao Submundo.** Você virou Ladrão. Prepara o cano e toma cuidado com a ROTA.';
+        else if (selectedJob === 'hacker') responseMsg = '💻 **Sistema invadido.** Você é um Hacker. Não esquece de apagar seu IP pra não rodar.';
+        else responseMsg = '👷 **Contrato assinado!** Você é um Cidadão Honesto. Trabalha duro e foge do crime.';
 
         await interaction.reply({ 
             content: responseMsg, 

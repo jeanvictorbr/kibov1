@@ -5,23 +5,23 @@ export default {
     execute: async (message) => {
         const embed = new EmbedBuilder()
             .setTitle('🏢 Agência de Empregos do Submundo')
-            .setDescription('A vida não está fácil e precisas de fazer dinheiro. Escolhe o teu caminho. Lembra-te: quanto maior o risco, maior o lucro.')
+            .setDescription('A vida não tá fácil e você precisa fazer dinheiro. Escolhe seu caminho aí, chefe. Só se liga: quanto maior o risco, maior o lucro.')
             .setColor('#2F3136')
             .addFields(
-                { name: '👷 Cidadão Honesto', value: 'Trabalho seguro. Ganha dinheiro limpo sem riscos de ser preso.' },
-                { name: '🥷 Ladrão de Rua', value: 'Bate carteiras. Risco alto, mas liberta comandos de assalto.' },
-                { name: '💻 Hacker', value: 'Invade contas bancárias no silêncio do teu quarto.' },
-                { name: '🚓 Oficial de Polícia', value: 'Caça os criminosos. **Requer um distintivo do Delegado local.**' }
+                { name: '👷 Cidadão Honesto', value: 'Trabalho seguro. Ganha dinheiro limpo sem risco de ir em cana.' },
+                { name: '🥷 Ladrão de Rua', value: 'Bate carteira e arromba caixa. Risco alto, mas o lucro é absurdo.' },
+                { name: '💻 Hacker', value: 'Invade conta bancária no silêncio do seu quarto.' },
+                { name: '🚓 Oficial de Polícia', value: 'Caça os criminosos. **Requer o distintivo do Delegado da cidade.**' }
             );
 
         const menu = new StringSelectMenuBuilder()
             .setCustomId('job_select')
-            .setPlaceholder('Selecione a sua Profissão...')
+            .setPlaceholder('Escolhe sua Profissão...')
             .addOptions([
-                { label: 'Cidadão Honesto', description: 'Trabalho normal, sem dores de cabeça.', value: 'cidadao', emoji: '👷' },
-                { label: 'Ladrão de Rua', description: 'Roubos rápidos e sujos na rua.', value: 'ladrao', emoji: '🥷' },
-                { label: 'Hacker', description: 'Crimes cibernéticos e invasões.', value: 'hacker', emoji: '💻' },
-                { label: 'Oficial de Polícia', description: 'Aplicar a lei e prender ladrões.', value: 'policial', emoji: '🚓' },
+                { label: 'Cidadão Honesto', description: 'Trabalho normal, sem dor de cabeça.', value: 'cidadao', emoji: '👷' },
+                { label: 'Ladrão de Rua', description: 'Roubo rápido e sujo nas ruas.', value: 'ladrao', emoji: '🥷' },
+                { label: 'Hacker', description: 'Crime cibernético e invasão de sistema.', value: 'hacker', emoji: '💻' },
+                { label: 'Oficial de Polícia', description: 'Aplica a lei e bota bandido na jaula.', value: 'policial', emoji: '🚓' },
             ]);
 
         const row = new ActionRowBuilder().addComponents(menu);
