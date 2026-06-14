@@ -1,6 +1,5 @@
 import { AttachmentBuilder, MessageFlags } from 'discord.js';
 import { prisma } from '../../../core/database.js';
-import { createEmbed } from '../../../utils/embedBuilder.js';
 import { gerarCanvasAssalto } from '../../../utils/canvasAssalto.js';
 
 export default {
@@ -9,19 +8,25 @@ export default {
         const copId = interaction.user.id;
         const msgId = interaction.message.id;
 
-        // Puxa os dados da RAM
         const robberyData = global.activeRobberies.get(msgId);
         if (!robberyData) {
             return interaction.reply({ content: '❌ Tarde demais, chefe! O beco já tá vazio ou o enquadro já rolou.', flags: [MessageFlags.Ephemeral] });
         }
 
-        // 1. TRAVA DA PROFISSÃO (Só Polícia pode intervir)
+        // --- RESPOSTAS VARIADAS PARA CURIOSOS ---
+        const paisanoMsgs = [
+            '🛑 Sai da frente, paisano! Isso é trampo pra Polícia. Área isolada!',
+            '🛑 Mete o pé, civil! Deixa a PM trabalhar, o bagulho tá doido aqui!',
+            '🛑 Tá fazendo o que aqui, curioso? Volta pra calçada que isso é serviço da ROTA!',
+            '🛑 Circulando, circulando! Área de risco, só oficial da lei passa da fita zebrada.',
+            '🛑 Tá querendo levar bala perdida, chefe? Sai do meio que a polícia chegou!'
+        ];
+
         const copDb = await prisma.user.findUnique({ where: { userId: copId } });
         if (!copDb || copDb.currentJob !== 'policial') {
-            return interaction.reply({ content: '🛑 Sai da frente, paisano! Isso é trampo pra Polícia. Área isolada!', flags: [MessageFlags.Ephemeral] });
+            return interaction.reply({ content: paisanoMsgs[Math.floor(Math.random() * paisanoMsgs.length)], flags: [MessageFlags.Ephemeral] });
         }
 
-        // 2. TRAVA DA JURISDIÇÃO (Só a polícia DAQUELA GUILDA)
         const hasBadge = await prisma.policeBadge.findUnique({
             where: { userId_guildId: { userId: copId, guildId: robberyData.guildId } }
         });
@@ -34,19 +39,13 @@ export default {
             return interaction.reply({ content: '🤨 Qual foi? Vai se auto-prender no meio do assalto? Tá chapando!', flags: [MessageFlags.Ephemeral] });
         }
 
-        // Apaga da memória pra ninguém mais clicar
         global.activeRobberies.delete(msgId);
 
         const robberId = robberyData.robberId;
         const loot = robberyData.loot;
-        
-        // Pega a foto do meliante pra estampar no jornal do Canvas (Garante que a foto exista)
         const avatarUrl = robberyData.avatarUrl || (await interaction.client.users.fetch(robberId)).displayAvatarURL({ extension: 'png', size: 256 });
-
-        // --- ROLETA DO CONFRONTO (50% / 50%) ---
         const chance = Math.random() * 100;
 
-        // --- LISTA DE 15 VITÓRIAS DA POLÍCIA ---
         const copWins = [
             { title: '🚨 BUSTED NA HORA!', desc: `O Oficial <@${copId}> chegou dando voadora com os dois pés! O <@${robberId}> voou longe e já caiu com as pulseiras de prata.` },
             { title: '⚡ ENQUADRO ZIKA!', desc: `O <@${robberId}> tentou dar o pinote, mas o <@${copId}> puxou a Taser. Tomou choque no lombo, caiu tremendo e foi pro xilindró!` },
@@ -65,7 +64,6 @@ export default {
             { title: '🛑 BLOQUEIO POLICIAL!', desc: `O <@${copId}> jogou a cama de prego na avenida! O <@${robberId}> tentou furar o bloqueio, furou os dois pneus da moto e saiu ralando no asfalto.` }
         ];
 
-        // --- LISTA DE 15 VITÓRIAS DO LADRÃO ---
         const robberWins = [
             { title: '💨 FUGA NO GRAU!', desc: `O <@${robberId}> já tava com uma Hornet sem placa ligada! Cortou giro na cara do Oficial <@${copId}> e sumiu no labirinto da favela.` },
             { title: '🥷 FUMAÇA NINJA!', desc: `O <@${copId}> chegou seco pra botar a mão, mas o <@${robberId}> estourou um gás lacrimogêneo, deu uma bicuda na canela do PM e evaporou.` },
@@ -84,13 +82,10 @@ export default {
             { title: '📻 RÁDIO QUEBRADO!', desc: `Sorte de malandro! Bem na hora que o <@${copId}> ia pedir reforço pra fechar o cerco, o rádio da PM ficou mudo. O <@${robberId}> aproveitou a brecha e meteu o pé.` }
         ];
 
-        // Tira a foto de "Em Andamento" da mensagem pra não estourar o visual do embed novo
         await interaction.message.removeAttachments().catch(()=> {});
 
         if (chance <= 50) {
-            // --- A POLÍCIA GANHOU O TIROTEIO ---
-            
-            // Ladrão vai pra prisão por 30 mins
+            // A POLÍCIA GANHOU
             const jailTime = new Date(Date.now() + 30 * 60 * 1000);
             await prisma.cooldown.upsert({
                 where: { userId_command: { userId: robberId, command: 'preso' } },
@@ -98,54 +93,36 @@ export default {
                 create: { userId: robberId, command: 'preso', expiresAt: jailTime }
             });
 
-            // Recompensa do Policial (Ele ganha 30% do valor que estava no caixa)
             const copReward = Math.floor(loot * 0.30);
             await prisma.user.update({
                 where: { userId: copId },
                 data: { balance: { increment: copReward } }
             });
 
-            // Cria o novo Canvas com fundo vermelho (BUSTED)
             const canvasPreso = await gerarCanvasAssalto(avatarUrl, 'preso', loot);
             const attachPreso = new AttachmentBuilder(canvasPreso, { name: 'resultado_preso.png' });
-
-            // Sorteia a história de vitória da polícia
             const historiaSorteada = copWins[Math.floor(Math.random() * copWins.length)];
 
-            // Cria o Embed V2 nativo do seu bot
-            const embedVitoria = createEmbed({
-                title: historiaSorteada.title,
-                description: `${historiaSorteada.desc}\n\n🔒 **O vagabundo rodou e pegou 30 minutos em Alcatraz!**\n💰 **O Oficial faturou $${copReward.toLocaleString('pt-BR')} pelo serviço!**`,
-                color: '#FF0000'
-            });
-            embedVitoria.setImage('attachment://resultado_preso.png');
+            // MENSAGEM PURA, SEM EMBED
+            const textoVitoria = `🚨 **${historiaSorteada.title}**\n\n${historiaSorteada.desc}\n\n🔒 **O vagabundo rodou e pegou 30 minutos em Alcatraz!**\n💰 **O Oficial faturou $${copReward.toLocaleString('pt-BR')} pelo serviço!**`;
 
-            await interaction.update({ embeds: [embedVitoria], files: [attachPreso], components: [] });
+            await interaction.update({ content: textoVitoria, files: [attachPreso], components: [] });
 
         } else {
-            // --- O LADRÃO GANHOU O TIROTEIO E FUGIU ---
-
+            // O LADRÃO GANHOU E FUGIU
             await prisma.user.update({
                 where: { userId: robberId },
                 data: { balance: { increment: loot } }
             });
 
-            // Cria o novo Canvas com fundo verde (FUGA SUCEDIDA)
             const canvasFuga = await gerarCanvasAssalto(avatarUrl, 'fuga', loot);
             const attachFuga = new AttachmentBuilder(canvasFuga, { name: 'resultado_fuga.png' });
-
-            // Sorteia a história de fuga do ladrão
             const historiaSorteada = robberWins[Math.floor(Math.random() * robberWins.length)];
 
-            // Cria o Embed V2 nativo do seu bot
-            const embedFuga = createEmbed({
-                title: historiaSorteada.title,
-                description: `${historiaSorteada.desc}\n\n💸 **O Ladrão embolsou os $${loot.toLocaleString('pt-BR')} do caixa!**\n🤕 **A Polícia ficou só na saudade!**`,
-                color: '#00FF66'
-            });
-            embedFuga.setImage('attachment://resultado_fuga.png');
+            // MENSAGEM PURA, SEM EMBED
+            const textoFuga = `💥 **${historiaSorteada.title}**\n\n${historiaSorteada.desc}\n\n💸 **O Ladrão embolsou os $${loot.toLocaleString('pt-BR')} do caixa!**\n🤕 **A Polícia ficou só na saudade!**`;
 
-            await interaction.update({ embeds: [embedFuga], files: [attachFuga], components: [] });
+            await interaction.update({ content: textoFuga, files: [attachFuga], components: [] });
         }
     }
 };
