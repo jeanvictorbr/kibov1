@@ -16,7 +16,7 @@ export default {
                 },
                 { 
                     name: '🔫 POLÍCIA & LADRÃO (NOVO)', 
-                    value: '`k assaltar_caixa` - Tenta estourar um caixa (Requer ser Ladrão).\n`k prender @user` - Dá um enquadro num criminoso (Requer ser PM).\n`k fuga` - Tenta serrar as grades de Alcatraz.\n`k subornar @PM [valor]` - Oferece grana pro PM pra sair da cadeia.', 
+                    value: '`k assaltar_caixa` - Tenta estourar um caixa.\n`k carroforte` - Inicia o grande roubo ao Carro Forte (Requer C4).\n`k prender @user` - Dá um enquadro num criminoso (Requer ser PM).\n`k fuga` - Tenta serrar as grades de Alcatraz.\n`k subornar @PM [valor]` - Oferece grana pro PM pra sair da cadeia.', 
                     inline: false 
                 },
                 { 
@@ -26,12 +26,12 @@ export default {
                 },
                 { 
                     name: '🛒 ITENS & IMPÉRIO', 
-                    value: '`k loja` - Compre vantagens (Colete, Pé de Cabra, etc).\n`k comprar [item]` - Adquire um item da loja.\n`k usar` - Abre seu inventário para ativar itens.\n`k empresas` - Compre, gerencie lucros e venda negócios.\n`k mercado` - Mercado livre de itens entre jogadores.\n`k mercadonegro` - Compre equipamentos ilícitos e empresas restritas.', 
+                    value: '`k loja` - Compre vantagens legais.\n`k mercadonegro` - Itens restritos (ex: C4) e empresas de jogadores.\n`k comprar [item]` - Adquire um item da loja ou beco.\n`k usar` - Abre seu inventário para ativar itens.\n`k empresas` - Gerencie lucros e venda negócios.\n`k mercado` - Mercado livre de itens entre jogadores.', 
                     inline: false 
                 },
                 { 
                     name: '🎰 CASSINO & APOSTAS', 
-                    value: '`k tigrinho [valor]` - Fortune Tiger Kibo HD! Rode as roletas e fature.\n`k mines [aposta] [minas]` - Encontre diamantes e fuja das bombas.\n`k crash [valor]` - Pare o multiplicador antes que o gráfico exploda.\n`k coinflip @user [valor]` - Aposte 50/50 na moeda contra outro jogador.', 
+                    value: '`k tigrinho [valor]` - Fortune Tiger Kibo HD.\n`k mines [aposta] [minas]` - Encontre diamantes.\n`k crash [valor]` - Pare o multiplicador antes que exploda.\n`k coinflip @user [valor]` - Cara ou coroa contra outro jogador.', 
                     inline: false 
                 },
                 { 
@@ -41,7 +41,7 @@ export default {
                 },
                 { 
                     name: '🎭 INTERAÇÃO SOCIAL', 
-                    value: '`k bio [texto]` - Altere a mensagem de status do seu perfil.\n`k abracar @user` - Dê um abraço apertado.\n`k beijar @user` - Roube um beijo.\n`k socar @user` - Dê um direto na cara.\n`k chutar @user` - Um bico ninja.\n`k morder @user` - Mordida feroz.\n`k dancar @user` - Passinho sincronizado.', 
+                    value: '`k bio [texto]` - Altere a mensagem de status do seu perfil.\n`k abracar`, `k socar`, `k chutar`, `k morder`, `k dancar` @user.', 
                     inline: false 
                 }
             )

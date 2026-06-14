@@ -10,7 +10,7 @@ export default {
         // Lista completa de chaves armazenadas no banco de dados
         const commandsToCheck = [
             'executar', 'daily', 'mensal', 
-            'int_abracar', 'int_socar', 'int_beijar', 
+            'int_abracar', 'int_socar', 
             'int_dancar', 'int_morder', 'int_chutar'
         ];
         

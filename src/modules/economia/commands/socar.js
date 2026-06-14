@@ -15,7 +15,7 @@ export default {
                 "# **Você não deu chance para o oponente.**"
             ],
             gifs: [
-                "LINK_GIF_1", "LINK_GIF_2", "LINK_GIF_3", "LINK_GIF_4", "LINK_GIF_5"
+                "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHJvdzQydWY2M3ZudnRxNWZlNGV4MjBhZzYzNTI5d24ybW5yeTFwZSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/mTvNxOkKvJ9FoFl6iZ/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHJvdzQydWY2M3ZudnRxNWZlNGV4MjBhZzYzNTI5d24ybW5yeTFwZSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/eFpnEraotSx3Aj3zoq/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHJvdzQydWY2M3ZudnRxNWZlNGV4MjBhZzYzNTI5d24ybW5yeTFwZSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/998oyT9xN3pBLgCrm6/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHJvdzQydWY2M3ZudnRxNWZlNGV4MjBhZzYzNTI5d24ybW5yeTFwZSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/cL7PRkWRwTBGy9UKlu/giphy.gif", "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3djJkNDR1Z2NlY2xpZmdycnF0dnFtenBibnNiMjhsajMwc3MzYjA3NCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Au6hYuHy0WONwqOxj5/giphy.gif"
             ]
         };
 
