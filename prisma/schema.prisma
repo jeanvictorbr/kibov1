@@ -54,6 +54,7 @@ model Inventory {
   id     String @id @default(uuid())
   userId String
   itemId String
+  amount Int    @default(1) // <-- ADICIONE ESTA LINHA
   user   User   @relation(fields: [userId], references: [userId])
 }
 
