@@ -1,6 +1,9 @@
 export function parseAmount(input) {
-    if (!input) return 0;
-    const str = input.toLowerCase().trim();
+    // Trava de segurança absoluta
+    if (input === undefined || input === null) return 0;
+    
+    // Converte para string com segurança antes de usar toLowerCase
+    const str = String(input).toLowerCase().trim();
 
     // Lógica de "Tudo"
     if (['tudo', 'all', 't'].includes(str)) return 'ALL';

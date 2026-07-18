@@ -1,7 +1,7 @@
 import { AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createCanvas } from 'canvas';
 import { prisma } from '../../../core/database.js';
-import { parseAmount } from '../../../utils/parser.js'; // Importando o conversor universal
+import { parseAmount } from '../../../utils/parser.js';
 
 async function drawCrash(mult, aposta) {
     const canvas = createCanvas(400, 250);
@@ -18,14 +18,19 @@ async function drawCrash(mult, aposta) {
 export default {
     name: 'crash',
     execute: async (message, args) => {
-        // 1. Busca o usuário no banco e garante que ele existe
+        // 1. TRAVA INICIAL: Verifica se o usuário digitou algum valor
+        if (!args || args.length === 0 || !args[0]) {
+            return message.reply('❌ **Diga o valor da aposta, chefe!**\nEx: `k crash 10k` ou `k crash tudo`');
+        }
+
+        // 2. Busca o usuário no banco e garante que ele existe
         const user = await prisma.user.upsert({
             where: { userId: message.author.id },
             update: {},
             create: { userId: message.author.id }
         });
 
-        // 2. Lê a aposta usando o nosso conversor inteligente
+        // 3. Lê a aposta usando o nosso conversor inteligente
         let aposta = parseAmount(args[0]);
 
         if (aposta === 'ALL') {
@@ -33,15 +38,15 @@ export default {
         }
 
         if (!aposta || isNaN(aposta) || aposta <= 0) {
-            return message.reply('**Diga o valor da aposta, chefe!**\nEx: `k crash 10k` ou `k crash tudo`');
+            return message.reply('❌ **Valor de aposta inválido!**\nEx: `k crash 10k` ou `k crash tudo`');
         }
 
-        // 3. A TRAVA DE SEGURANÇA IMPETrÁVEL
+        // 4. A TRAVA DE SEGURANÇA IMPENETRÁVEL
         if (user.balance < aposta) {
             return message.reply(`❌ **Tentativa de fraude bloqueada!**\nVocê só tem **$${user.balance.toLocaleString('pt-BR')}** na sua carteira.`);
         }
 
-        // 4. Debita da carteira APENAS DEPOIS da verificação
+        // 5. Debita da carteira APENAS DEPOIS da verificação
         await prisma.user.update({ 
             where: { userId: message.author.id }, 
             data: { balance: { decrement: aposta } } 

@@ -1,22 +1,45 @@
-// src/events/interactionCreate.js
 export default {
     name: 'interactionCreate',
-    async execute(interaction, client) {
-        if (!interaction.isButton() && !interaction.isStringSelectMenu() && !interaction.isModalSubmit()) return;
+    async execute(interaction) {
+        if (!interaction.isButton() && !interaction.isModalSubmit() && !interaction.isStringSelectMenu()) return;
 
-        // Pega apenas a primeira parte do ID (ex: "crash_stop" de "crash_stop_123_456")
-        const idParts = interaction.customId.split('_');
-        const mainId = `${idParts[0]}_${idParts[1]}`; 
-        
-        const component = client.components.get(mainId);
+        // Extrai a base do ID do botão (ex: 'crash_stop_123' vira 'crash_stop')
+        let customIdBase = interaction.customId;
+        if (interaction.customId.includes('_')) {
+            // Ajuste aqui dependendo de como você nomeou os arquivos em /components/
+            // Ex: Se o arquivo for 'crash_stop.js', ele pega 'crash_stop'
+            const parts = interaction.customId.split('_');
+            if (parts.length > 2) {
+                customIdBase = `${parts[0]}_${parts[1]}`;
+            } else {
+                customIdBase = parts[0];
+            }
+        }
 
-        if (!component) return interaction.reply({ content: 'Componente não configurado.', ephemeral: true });
+        const component = interaction.client.components.get(customIdBase);
+
+        if (!component) {
+            return interaction.reply({ 
+                content: '❌ Componente não configurado na Engine.', 
+                flags: [ 64 ] // Substitui o 'ephemeral: true' obsoleto
+            }).catch(() => {});
+        }
 
         try {
-            await component.execute(interaction, client);
+            // "Comprando tempo" do Discord caso o banco de dados demore
+            if (interaction.isButton()) {
+                await interaction.deferUpdate().catch(() => {});
+            }
+            
+            await component.execute(interaction);
         } catch (error) {
-            console.error(error);
-            interaction.reply({ content: 'Erro na Engine.', ephemeral: true });
+            console.error('Erro na execução do componente:', error);
+            // Avisa o usuário sem crashar o bot inteiro
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({ content: '❌ Ocorreu um erro ao executar esta ação!', flags: [ 64 ] }).catch(() => {});
+            } else {
+                await interaction.reply({ content: '❌ Ocorreu um erro ao executar esta ação!', flags: [ 64 ] }).catch(() => {});
+            }
         }
     }
 };
