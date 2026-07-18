@@ -80,17 +80,20 @@ export default {
         const collector = msg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 60000 });
 
         collector.on('collect', async (i) => {
+            // TRAVA DE TEMPO: Avisa o Discord instantaneamente que estamos processando a resposta
+            await i.deferUpdate().catch(() => {});
+
             // Segurança dupla: verifica se o cara ainda tá preso e se tem o dinheiro
             const checkRobber = await prisma.user.findUnique({ where: { userId: robberId } });
             const checkJail = await prisma.cooldown.findUnique({ where: { userId_command: { userId: robberId, command: 'preso' } } });
 
             if (!checkJail || checkJail.expiresAt < new Date()) {
-                await i.update({ content: '⏳ Tarde demais! O cara já fugiu ou a pena acabou.', embeds: [], components: [] });
+                await i.editReply({ content: '⏳ Tarde demais! O cara já fugiu ou a pena acabou.', embeds: [], components: [] });
                 return collector.stop();
             }
 
             if (checkRobber.balance < bribeAmount) {
-                await i.update({ content: '🤡 O vagabundo tentou dar o calote! Prometeu a grana mas a carteira tá vazia. Negócio cancelado!', embeds: [], components: [] });
+                await i.editReply({ content: '🤡 O vagabundo tentou dar o calote! Prometeu a grana mas a carteira tá vazia. Negócio cancelado!', embeds: [], components: [] });
                 return collector.stop();
             }
 
@@ -107,7 +110,8 @@ export default {
                     .setDescription(`O Oficial <@${targetUser.id}> olhou pros dois lados, guardou os **$${bribeAmount.toLocaleString('pt-BR')}** na bota e destrancou a porta.\n\n🔓 O <@${robberId}> tá solto na rua de novo! O sistema é sujo!`)
                     .setColor('#00FF00');
 
-                await i.update({ content: '💸 Fechou no sigilo.', embeds: [embedAceitou], components: [] });
+                // Atualizado para editReply
+                await i.editReply({ content: '💸 Fechou no sigilo.', embeds: [embedAceitou], components: [] });
 
             } else if (i.customId === 'recusar_suborno') {
                 // POLÍCIA RECUSOU (Sorteia punição de 2 a 8 minutos)
@@ -124,7 +128,8 @@ export default {
                     .setDescription(`O Oficial <@${targetUser.id}> deu risada da cara do <@${robberId}>, recusou a grana e bateu com o cacetete na grade!\n\n⚖️ **Punição:** O juiz sorteou mais **+${penaExtra} Minutos** na pena por tentativa de suborno!`)
                     .setColor('#FF0000');
 
-                await i.update({ content: '👮 A lei não tá à venda, chefe!', embeds: [embedRecusou], components: [] });
+                // Atualizado para editReply
+                await i.editReply({ content: '👮 A lei não tá à venda, chefe!', embeds: [embedRecusou], components: [] });
             }
 
             collector.stop();
