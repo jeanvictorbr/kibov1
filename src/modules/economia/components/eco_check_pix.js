@@ -1,19 +1,29 @@
 import { prisma } from '../../../core/database.js';
-import { generatePixReceipt } from '../../../utils/canvasRecibo.js'; // Mudamos a importação
+import { generatePixReceipt } from '../../../utils/canvasRecibo.js';
 import { AttachmentBuilder, MessageFlags } from 'discord.js';
 
 export default {
     customId: 'pix_confirm',
-    execute: async (interaction, client) => {
+    execute: async (interaction) => {
+        // 1. O SEGREDO: Pegamos o 'client' direto da interação!
+        const client = interaction.client;
+        
         const [_, __, senderId, targetId, amountStr] = interaction.customId.split('_');
         const amount = parseFloat(amountStr);
 
+        // 2. Trava de segurança imediata
         if (interaction.user.id !== senderId) {
-            return interaction.reply({ content: 'Tira o olho, chefe! Esse Pix não é seu.', flags: [MessageFlags.Ephemeral] });
+            return interaction.reply({ 
+                content: '❌ Tira o olho, chefe! Esse Pix não é seu.', 
+                flags: [MessageFlags.Ephemeral] 
+            });
         }
 
+        // 3. Avisa o Discord que vamos demorar um pouco (gerar Canvas pesa)
+        await interaction.deferUpdate();
+
         try {
-            // 1. Atualiza/Cria o Remetente e Destinatário
+            // Atualiza/Cria o Remetente e Destinatário
             await prisma.user.upsert({
                 where: { userId: senderId },
                 update: { bank: { decrement: amount } },
@@ -26,26 +36,37 @@ export default {
                 create: { userId: targetId, bank: amount }
             });
 
-            // 2. Registrar a transação e PEGAR O ID DELA
+            // Registrar a transação e PEGAR O ID DELA
             const transacao = await prisma.transaction.create({
                 data: { fromUserId: senderId, toUserId: targetId, amount: amount }
             });
 
+            // 4. AQUI O ERRO SUMIU! Agora o 'client' existe e funciona.
             const targetUser = await client.users.fetch(targetId);
             
-            // 3. Usa a NOVA FUNÇÃO de Recibo Bancário! 
-            // Usamos split('-')[0] para o ID não ficar gigante, pegando só os primeiros 8 caracteres do UUID.
+            // Usa a NOVA FUNÇÃO de Recibo Bancário! 
             const receiptBuffer = await generatePixReceipt(interaction.user, targetUser, amount, transacao.id.split('-')[0]);
             const attachment = new AttachmentBuilder(receiptBuffer, { name: 'comprovante_pix.png' });
 
-            await interaction.update({ content: `✅ **Transferência de $${amount.toLocaleString('pt-BR')} confirmada com sucesso!**`, components: [] });
-            await interaction.followUp({ content: 'Aqui está o seu comprovante bancário:', files: [attachment] });
+            // 5. Como usamos deferUpdate(), alteramos a mensagem original com editReply
+            await interaction.editReply({ 
+                content: `✅ **Transferência de $${amount.toLocaleString('pt-BR')} confirmada com sucesso!**`, 
+                components: [] 
+            });
+            
+            // Mandamos a imagem como uma mensagem anexa embaixo
+            await interaction.followUp({ 
+                content: 'Aqui está o seu comprovante bancário:', 
+                files: [attachment] 
+            });
 
         } catch (error) {
             console.error("Erro no processamento do Pix:", error);
-            if (!interaction.replied) {
-                await interaction.reply({ content: '❌ Erro ao processar o PIX.', flags: [MessageFlags.Ephemeral] });
-            }
+            // Tratamento de erro seguro
+            await interaction.followUp({ 
+                content: '❌ Erro interno ao processar o PIX.', 
+                flags: [MessageFlags.Ephemeral] 
+            }).catch(() => {});
         }
     }
 };
