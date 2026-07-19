@@ -6,14 +6,29 @@ export default {
         // Trava de segurança para o dono
         if (message.author.id !== process.env.DEVELOPER_ID) return;
 
-        // Uso: k additem Nome Preço Descrição
-        const [name, price, ...descArr] = args;
-        const description = descArr.join(' ');
+        // 1. Extrai o nome (Primeira palavra) e o Preço (Segunda palavra convertida para número)
+        const name = args[0];
+        const price = parseInt(args[1]);
+        
+        // 2. Junta absolutamente tudo que vier depois do preço como descrição
+        const description = args.slice(2).join(' ');
 
-        await prisma.shopItem.create({
-            data: { name, price: parseInt(price), description, type: 'UTILITY' }
-        });
+        // 3. Trava anti-crash: Avisa se você esquecer algo ou errar a ordem
+        if (!name || isNaN(price) || !description) {
+            return message.reply({
+                content: '❌ **Erro de Sintaxe!**\nO formato correto é: `k additem <Nome> <Preço> <Descrição>`\n👉 **Exemplo:** `k additem Scanner 15000 📟 Rastreia quem tem dinheiro vivo na carteira.`'
+            });
+        }
 
-        message.reply(`✅ Item **${name}** adicionado à loja por $${price}!`);
+        try {
+            await prisma.shopItem.create({
+                data: { name, price, description, type: 'UTILITY' }
+            });
+
+            message.reply(`✅ Item **${name}** adicionado à loja por **$${price.toLocaleString('pt-BR')}**!\n📝 *${description}*`);
+        } catch (error) {
+            console.error(error);
+            message.reply('❌ Erro ao adicionar o item. Verifique se ele já não existe no banco de dados!');
+        }
     }
 };
