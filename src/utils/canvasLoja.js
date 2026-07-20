@@ -107,7 +107,7 @@ export async function generateLojaCanvas(items) {
         ctx.textAlign = 'right';
         ctx.fillText(`$${item.price.toLocaleString('pt-BR')}`, 730, currentY + 40);
 
-        // Descrição (Agora num tom claro quase branco pra ficar super legível)
+        // Descrição (Agora num tom claro qssuase branco pra ficar super legível)
         ctx.fillStyle = '#E0E5FF'; 
         ctx.font = '16px Arial';
         ctx.textAlign = 'left';
