@@ -16,15 +16,14 @@ function drawRoundRect(ctx, x, y, width, height, radius) {
 }
 
 export async function generateLojaCanvas(items) {
-    // 1. PASSO DE MEDIÇÃO: Cria um canvas fantasma só para calcular as quebras de linha
+    // 1. MEDIÇÃO DAS QUEBRAS DE LINHA
     const dummyCanvas = createCanvas(800, 600);
     const dCtx = dummyCanvas.getContext('2d');
-    dCtx.font = '16px Arial'; // A mesma fonte e tamanho da descrição
+    dCtx.font = '16px Arial';
 
-    const maxTextWidth = 660; // Largura máxima que o texto pode atingir dentro da caixa
-    let totalHeight = 130; // Começa com espaço pro cabeçalho
+    const maxTextWidth = 660; 
+    let totalHeight = 130; 
 
-    // Calcula a altura dinâmica baseada no tamanho do texto
     const parsedItems = items.map(item => {
         const words = item.description.split(' ');
         let line = '';
@@ -34,32 +33,31 @@ export async function generateLojaCanvas(items) {
             let testLine = line + words[n] + ' ';
             let testWidth = dCtx.measureText(testLine).width;
             if (testWidth > maxTextWidth && n > 0) {
-                lines.push(line);
+                lines.push(line.trim());
                 line = words[n] + ' ';
             } else {
                 line = testLine;
             }
         }
-        lines.push(line);
+        lines.push(line.trim());
 
-        // Define a altura desta caixa específica (Topo + Linhas + Base)
         const blockHeight = 40 + (lines.length * 22) + 20;
-        totalHeight += blockHeight + 25; // 25 de espaço para a próxima caixa
+        totalHeight += blockHeight + 25;
 
         return { ...item, lines, blockHeight };
     });
 
-    totalHeight += 30; // Espaçamento extra no fundo da imagem
+    totalHeight += 30;
 
-    // 2. PASSO DE DESENHO: Cria o Canvas real com a altura perfeita que calculamos
+    // 2. DESENHO DO CANVAS OFICIAL
     const canvas = createCanvas(800, totalHeight);
     const ctx = canvas.getContext('2d');
 
-    // Fundo Deep Web
+    // Fundo Tático Deep Web
     ctx.fillStyle = '#0a0b10';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Grade Tática (Radar)
+    // Grade de Radar (bem suave pra não poluir)
     ctx.strokeStyle = '#00FF66';
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.05;
@@ -67,9 +65,9 @@ export async function generateLojaCanvas(items) {
     for (let i = 0; i < totalHeight; i += 40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(800, i); ctx.stroke(); }
     ctx.globalAlpha = 1.0;
 
-    // Título Principal
+    // Título Principal (Esse sim tem um leve neon)
     ctx.shadowColor = '#00FF66';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 10;
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 42px Arial';
     ctx.textAlign = 'center';
@@ -78,39 +76,39 @@ export async function generateLojaCanvas(items) {
     // Linha Divisória
     ctx.fillStyle = '#00FF66';
     ctx.fillRect(200, 90, 400, 3);
-    ctx.shadowBlur = 0; // Desliga o brilho pra não pesar no texto
+    
+    // 🔥 CORREÇÃO PRINCIPAL: Desligando a sombra radioativa!
+    ctx.shadowBlur = 0; 
+    ctx.shadowColor = 'transparent';
 
     // 3. DESENHANDO OS ITENS E CAIXAS
     let currentY = 130;
 
     for (const item of parsedItems) {
-        // Caixa de Fundo do Item
-        ctx.fillStyle = 'rgba(0, 255, 102, 0.03)';
-        ctx.strokeStyle = 'rgba(0, 255, 102, 0.6)';
-        ctx.lineWidth = 2;
+        // Caixa de Fundo Escura (Contraste perfeito)
+        ctx.fillStyle = '#11131a'; 
+        ctx.strokeStyle = '#00FF66'; // Borda verde fininha e elegante
+        ctx.lineWidth = 1.5;
         
-        ctx.shadowColor = '#00FF66';
-        ctx.shadowBlur = 8;
         drawRoundRect(ctx, 40, currentY, 720, item.blockHeight, 15);
         ctx.fill();
         ctx.stroke();
-        ctx.shadowBlur = 0;
 
         // Nome do Item
-        ctx.fillStyle = '#FFD700'; // Dourado
+        ctx.fillStyle = '#FFD700'; // Dourado forte
         ctx.font = 'bold 28px Courier New';
         ctx.textAlign = 'left';
-        const displayName = item.name.replace(/_/g, ' '); // Tira underline
+        const displayName = item.name.replace(/_/g, ' '); 
         ctx.fillText(displayName, 70, currentY + 40);
 
         // Preço
-        ctx.fillStyle = '#00FF66';
+        ctx.fillStyle = '#00FF66'; // Verde nítido
         ctx.font = 'bold 28px Arial';
         ctx.textAlign = 'right';
         ctx.fillText(`$${item.price.toLocaleString('pt-BR')}`, 730, currentY + 40);
 
-        // Descrição Dinâmica
-        ctx.fillStyle = '#888899'; // Mantive o cinza do seu original
+        // Descrição (Agora num tom claro quase branco pra ficar super legível)
+        ctx.fillStyle = '#E0E5FF'; 
         ctx.font = '16px Arial';
         ctx.textAlign = 'left';
         
@@ -120,7 +118,7 @@ export async function generateLojaCanvas(items) {
             lineY += 22;
         }
 
-        currentY += item.blockHeight + 25; // Avassnça para o Y da próxima caixa
+        currentY += item.blockHeight + 25;
     }
 
     return canvas.toBuffer();
