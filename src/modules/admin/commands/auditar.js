@@ -6,19 +6,18 @@ export default {
         // Trava de segurança suprema (Só você pode usar)
         if (message.author.id !== process.env.DEVELOPER_ID) return;
 
-        if (!args[0]) {
+        if (!args || !args[0]) {
             return message.reply('❌ **Uso correto:** `k auditar <ID do Usuário>` ou marque ele com `@usuario`');
         }
 
-        // 1. O FILTRO DE ID: Remove qualquer letra, <, @, ou > e deixa SÓ os números.
-        // Assim, tanto faz se você digitar "k auditar @Ze" ou "k auditar 123456789012345678"
-        const targetId = args[0].replace(/[^0-9]/g, '');
+        // 1. O FILTRO DE ID CORRIGIDO: Força a conversão para Texto (String) antes de limpar
+        const targetId = String(args[0]).replace(/[^0-9]/g, '');
 
         if (targetId.length < 15) {
             return message.reply('❌ ID inválido. Um ID do Discord contém apenas números (geralmente 18 dígitos).');
         }
 
-        // 2. BUSCA GLOBAL NO DISCORD: Tenta puxar o nome original do cara na API do Discord
+        // 2. BUSCA GLOBAL NO DISCORD: Tenta puxar o nome original do cara na API
         let discordUser = null;
         try {
             discordUser = await message.client.users.fetch(targetId);
@@ -40,7 +39,7 @@ export default {
                 OR: [ { fromUserId: targetId }, { toUserId: targetId } ]
             },
             orderBy: { id: 'desc' }, // Pega do mais recente pro mais antigo
-            take: 15 // Aumentei pra 15 pra te dar um rastro maior
+            take: 15 // Pega as 15 últimas movimentações
         });
 
         // 5. MONTA O RELATÓRIO DO FBI
