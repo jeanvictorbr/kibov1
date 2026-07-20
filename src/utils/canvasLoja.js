@@ -120,7 +120,7 @@ export async function generateLojaCanvas(items) {
             lineY += 22;
         }
 
-        currentY += item.blockHeight + 25; // Avança para o Y da próxima caixa
+        currentY += item.blockHeight + 25; // Avassnça para o Y da próxima caixa
     }
 
     return canvas.toBuffer();
