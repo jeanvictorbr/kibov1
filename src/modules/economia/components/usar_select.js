@@ -27,62 +27,71 @@ export default {
         }
 
         // ==========================================
-        // 📡 SCANNER CLANDESTINO (Ultra Otimizado)
+        // 🥷 LÓGICA DO ITEM: ESPECIALISTA (5 MINUTOS)
+        // ==========================================
+        if (itemName.toLowerCase() === 'especialista') {
+            // 1. Consome o item 
+            if (itemInstance.amount > 1) {
+                await prisma.inventory.update({ where: { id: itemInstance.id }, data: { amount: { decrement: 1 } } });
+            } else {
+                await prisma.inventory.delete({ where: { id: itemInstance.id } });
+            }
+
+            // 2. Cria o tempo limite do buff (Agora + 5 minutos)
+            const tempoBuff = new Date(Date.now() + 5 * 60 * 1000);
+
+            // 3. Registra na tabela de cooldowns como uma "vantagem"
+            await prisma.cooldown.upsert({
+                where: { userId_command: { userId: userId, command: 'buff_especialista' } },
+                update: { expiresAt: tempoBuff },
+                create: { userId: userId, command: 'buff_especialista', expiresAt: tempoBuff }
+            });
+
+            return interaction.editReply({ 
+                content: `# 🥷 ESPECIALISTA CONTRATADO!\n> Os rastros do seu IP foram apagados. Você está **TOTALMENTE IMUNE ao tempo de espera de roubo por 5 Minutos!** Corra e faça a festa!`, 
+                components: [] 
+            });
+        }
+
+        // ==========================================
+        // 📡 LÓGICA DO ITEM: SCANNER CLANDESTINO
         // ==========================================
         if (itemName.toLowerCase() === 'scanner') {
             try {
-                // 1. Consome o Scanner
                 if (itemInstance.amount > 1) {
-                    await prisma.inventory.update({
-                        where: { id: itemInstance.id },
-                        data: { amount: { decrement: 1 } }
-                    });
+                    await prisma.inventory.update({ where: { id: itemInstance.id }, data: { amount: { decrement: 1 } } });
                 } else {
                     await prisma.inventory.delete({ where: { id: itemInstance.id } });
                 }
 
-                // 2. 🔥 O SEGREDO DA VELOCIDADE: Busca os 20 mais ricos globalmente (0.01 segundos)
-                const alvosDb = await prisma.user.findMany({
-                    where: { 
-                        balance: { gt: 5000 },
-                        userId: { not: userId } 
-                    },
-                    orderBy: { balance: 'desc' },
-                    take: 20 
-                });
+                const membrosServidorIds = interaction.guild ? Array.from(interaction.guild.members.cache.keys()) : [];
+                const queryFiltro = { balance: { gt: 5000 }, userId: { not: userId } };
+                if (membrosServidorIds.length > 0) { queryFiltro.userId.in = membrosServidorIds; }
 
+                const alvosDb = await prisma.user.findMany({ where: queryFiltro, orderBy: { balance: 'desc' }, take: 20 });
                 const targetsData = [];
 
-                // 3. 🔥 Filtro inteligente: Testa 1 por 1. Assim que achar 3 no servidor, ele PARA o loop.
                 for (const alvo of alvosDb) {
-                    if (targetsData.length >= 3) break; // Já achou os 3? Foge do loop na hora!
-
+                    if (targetsData.length >= 3) break; 
                     try {
-                        // Pergunta pro Discord só sobre ESSE usuário (Super Rápido)
                         const isMember = await interaction.guild.members.fetch(alvo.userId).catch(() => null);
-                        if (!isMember) continue; // Não tá no servidor? Pula pro próximo!
-
+                        if (!isMember) continue; 
                         const variacao = Math.floor(alvo.balance * 0.15); 
-                        
                         targetsData.push({
                             tag: `@${isMember.user.username}`,
                             avatar: isMember.user.displayAvatarURL({ extension: 'png', size: 128 }),
                             min: alvo.balance - variacao,
                             max: alvo.balance + variacao
                         });
-                    } catch (err) {
-                        console.error("Erro ao puxar avatar:", err);
-                    }
+                    } catch (err) { console.error("Erro ao puxar avatar:", err); }
                 }
 
-                // 4. Gera a interface
                 const buffer = await generateScannerImage(targetsData);
                 const attachment = new AttachmentBuilder(buffer, { name: 'radar_tatico.png' });
 
                 return interaction.editReply({ 
                     content: '📡 **Scanner de Rede Clandestina Finalizado.**\n> 💡 *DICA: Olhe o `@` na imagem e corra para usar `k roubar @alvo` antes que ele guarde a grana no cofre!*', 
-                    files: [attachment], 
-                    components: [] 
+                    files: [attachment], components: [] 
                 });
             } catch (scannerError) {
                 console.error("[ERRO SCANNER]", scannerError);
@@ -91,22 +100,15 @@ export default {
         }
 
         // ==========================================
-        // 🛠️ OUTROS ITENS COMUNS
+        // 🛠️ LÓGICA PADRÃO PARA OS OUTROS ITENS
         // ==========================================
         if (itemInstance.amount > 1) {
-            await prisma.inventory.update({
-                where: { id: itemInstance.id },
-                data: { amount: { decrement: 1 } }
-            });
+            await prisma.inventory.update({ where: { id: itemInstance.id }, data: { amount: { decrement: 1 } } });
         } else {
             await prisma.inventory.delete({ where: { id: itemInstance.id } });
         }
 
         const msgVantagem = vantagens[itemName] || `Você usou ${itemName} com sucesso!`;
-
-        await interaction.editReply({ 
-            content: `# ⚡ ITEM ATIVADO\n${msgVantagem}`, 
-            components: [] 
-        });
+        await interaction.editReply({ content: `# ⚡ ITEM ATIVADO\n${msgVantagem}`, components: [] });
     }
 };

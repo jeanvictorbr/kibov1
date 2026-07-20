@@ -28,11 +28,22 @@ export default {
             return message.reply('# 🤖 ERRO NO SISTEMA!\n**Você não pode roubar bots. A gente não carrega dinheiro físico!**');
         }
 
-        // --- SISTEMA DE COOLDOWN (5 MINUTOS) ---
+        // ==========================================
+        // 🥷 VERIFICAÇÃO DO BUFF (ESPECIALISTA)
+        // ==========================================
+        const buffEspecialista = await prisma.cooldown.findUnique({
+            where: { userId_command: { userId: message.author.id, command: 'buff_especialista' } }
+        });
+
+        // Retorna true se o buff existir e ainda não tiver expirado
+        const temImunidade = buffEspecialista && buffEspecialista.expiresAt > new Date();
+
+        // --- SISTEMA DE COOLDOWN PADRÃO (5 MINUTOS) ---
         const cooldownTime = 5 * 60 * 1000; 
         const lastRobbery = cooldowns.get(message.author.id);
 
-        if (lastRobbery && Date.now() - lastRobbery < cooldownTime) {
+        // Só barra o cara se ele NÃO tiver a imunidade do Hacker Especialista
+        if (!temImunidade && lastRobbery && Date.now() - lastRobbery < cooldownTime) {
             const faltam = Math.ceil((cooldownTime - (Date.now() - lastRobbery)) / 1000 / 60);
             return message.reply(`# 🚓 A POLÍCIA TÁ NA SUA COLA!\n**Esconda-se por mais ${faltam} minuto(s) antes de tentar outro assalto!** 🏃💨`);
         }
@@ -58,9 +69,11 @@ export default {
         const bonusSorte = sorteLvl * 0.05; // Aumenta lucro em +5% por nível
         const bonusLabia = labiaLvl * 0.05; // Desconto na multa de 5% por nível
 
+        // Atualiza o tempo do último roubo na memória
         cooldowns.set(message.author.id, Date.now());
 
         const successChance = Math.random(); 
+        const msgImunidade = temImunidade ? `\n> 🥷 *Seu IP foi mascarado pelo Especialista! Nenhum tempo de espera foi gerado.*` : '';
 
         // --- 1. SUCESSO (APLICA A SORTE) ---
         if (successChance <= 0.45) {
@@ -78,7 +91,7 @@ export default {
 
             await prisma.transaction.create({ data: { fromUserId: victim.userId, toUserId: robber.userId, amount: finalStolen } });
 
-            return message.reply(`# 🥷 ASSALTO BEM SUCEDIDO!\n**Você encostou o ${targetUser.username} num beco e levou $${finalStolen.toLocaleString()} da carteira dele!**\n*Mete o pé antes que a viatura chegue!* 💰💨\n*🍀 A sua **Sorte (Nível ${sorteLvl})** garantiu +${(bonusSorte * 100).toFixed(0)}% a mais no montante do saque!*`);
+            return message.reply(`# 🥷 ASSALTO BEM SUCEDIDO!\n**Você encostou o ${targetUser.username} num beco e levou $${finalStolen.toLocaleString('pt-BR')} da carteira dele!**\n*Mete o pé antes que a viatura chegue!* 💰💨\n*🍀 A sua **Sorte (Nível ${sorteLvl})** garantiu +${(bonusSorte * 100).toFixed(0)}% a mais no montante do saque!*${msgImunidade}`);
         
         // --- 2. FRACASSO E PRISÃO (APLICA A LÁBIA) ---
         } else {
@@ -94,7 +107,7 @@ export default {
 
             await prisma.transaction.create({ data: { fromUserId: robber.userId, toUserId: victim.userId, amount: finalFine } });
 
-            return message.reply(`# 🚓 VOCÊ RODOU!\n**A vítima reagiu e chamou os guardas!**\nVocê tomou um pau e ainda foi obrigado a pagar **$${finalFine.toLocaleString()}** de indenização para o ${targetUser.username}!\n*Vai curar essas feridas, vagabundo.* 🤕🩸\n*🗣️ A sua **Lábia (Nível ${labiaLvl})** impressionou a polícia e te deu ${(bonusLabia * 100).toFixed(0)}% de desconto na multa!*`);
+            return message.reply(`# 🚓 VOCÊ RODOU!\n**A vítima reagiu e chamou os guardas!**\nVocê tomou um pau e ainda foi obrigado a pagar **$${finalFine.toLocaleString('pt-BR')}** de indenização para o ${targetUser.username}!\n*Vai curar essas feridas, vagabundo.* 🤕🩸\n*🗣️ A sua **Lábia (Nível ${labiaLvl})** impressionou a polícia e te deu ${(bonusLabia * 100).toFixed(0)}% de desconto na multa!*${msgImunidade}`);
         }
     }
 };
