@@ -5,13 +5,13 @@ import { generateScannerImage } from '../../../utils/canvasScanner.js';
 export default {
     customId: 'usar_select',
     execute: async (interaction) => {
-        // 1. TRAVA IMEDIATA: Avisa o Discord que estamos processando pra não dar timeout
+        // Trava Imediata e aviso de "Bot está pensando"
         await interaction.deferUpdate().catch(() => {});
 
         const itemName = interaction.values[0];
         const userId = interaction.user.id;
 
-        // Vantagens padrão
+        // Vantagens Padrão
         const vantagens = {
             'Amuleto': '💎 Você ativou o Amuleto! Sua sorte aumentou e seus lucros nos próximos trabalhos serão 50% maiores!',
             'Colete': '🛡️ Você equipou o Colete! Você está protegido contra o próximo roubo ou ataque.',
@@ -23,15 +23,15 @@ export default {
         });
 
         if (!itemInstance) {
-            return interaction.followUp({ content: '❌ Você não tem mais esse item no inventário!', ephemeral: true });
+            return interaction.followUp({ content: '❌ Você não tem mais esse item no inventário!', flags: [ 64 ] });
         }
 
         // ==========================================
-        // 📡 SCANNER CLANDESTINO
+        // 📡 SCANNER CLANDESTINO (Ultra Otimizado)
         // ==========================================
         if (itemName.toLowerCase() === 'scanner') {
             try {
-                // Consome a bateria/unidade do Radar
+                // 1. Consome o Scanner
                 if (itemInstance.amount > 1) {
                     await prisma.inventory.update({
                         where: { id: itemInstance.id },
@@ -41,44 +41,41 @@ export default {
                     await prisma.inventory.delete({ where: { id: itemInstance.id } });
                 }
 
-                // Puxa os IDs de quem o bot já está enxergando no servidor, sem forçar loading
-                const membrosServidorIds = interaction.guild ? Array.from(interaction.guild.members.cache.keys()) : [];
-
-                // Prepara o filtro do banco de dados
-                const queryFiltro = { 
-                    balance: { gt: 5000 },
-                    userId: { not: userId } // Tira o próprio usuário do radar
-                };
-
-                // Se conseguiu achar gente no servidor local, aplica o geofence!
-                if (membrosServidorIds.length > 0) {
-                    queryFiltro.userId.in = membrosServidorIds;
-                }
-
+                // 2. 🔥 O SEGREDO DA VELOCIDADE: Busca os 20 mais ricos globalmente (0.01 segundos)
                 const alvosDb = await prisma.user.findMany({
-                    where: queryFiltro,
+                    where: { 
+                        balance: { gt: 5000 },
+                        userId: { not: userId } 
+                    },
                     orderBy: { balance: 'desc' },
-                    take: 3
+                    take: 20 
                 });
 
                 const targetsData = [];
+
+                // 3. 🔥 Filtro inteligente: Testa 1 por 1. Assim que achar 3 no servidor, ele PARA o loop.
                 for (const alvo of alvosDb) {
+                    if (targetsData.length >= 3) break; // Já achou os 3? Foge do loop na hora!
+
                     try {
-                        const discordUser = await interaction.client.users.fetch(alvo.userId);
-                        const variacao = Math.floor(alvo.balance * 0.15); // Varia de 15% pra mais ou menos
+                        // Pergunta pro Discord só sobre ESSE usuário (Super Rápido)
+                        const isMember = await interaction.guild.members.fetch(alvo.userId).catch(() => null);
+                        if (!isMember) continue; // Não tá no servidor? Pula pro próximo!
+
+                        const variacao = Math.floor(alvo.balance * 0.15); 
                         
                         targetsData.push({
-                            tag: `@${discordUser.username}`, // Mostra o arroba correto
-                            avatar: discordUser.displayAvatarURL({ extension: 'png', size: 128 }),
+                            tag: `@${isMember.user.username}`,
+                            avatar: isMember.user.displayAvatarURL({ extension: 'png', size: 128 }),
                             min: alvo.balance - variacao,
                             max: alvo.balance + variacao
                         });
                     } catch (err) {
-                        console.error("Erro ao puxar foto de alvo pro radar:", err);
+                        console.error("Erro ao puxar avatar:", err);
                     }
                 }
 
-                // Gera a interface
+                // 4. Gera a interface
                 const buffer = await generateScannerImage(targetsData);
                 const attachment = new AttachmentBuilder(buffer, { name: 'radar_tatico.png' });
 
@@ -89,7 +86,7 @@ export default {
                 });
             } catch (scannerError) {
                 console.error("[ERRO SCANNER]", scannerError);
-                return interaction.followUp({ content: '❌ Ocorreu uma interferência de sinal. Tente usar novamente.', ephemeral: true });
+                return interaction.followUp({ content: '❌ Ocorreu uma interferência de sinal. Tente usar novamente.', flags: [ 64 ] });
             }
         }
 
