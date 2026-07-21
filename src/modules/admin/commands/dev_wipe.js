@@ -6,73 +6,64 @@ export default {
         // Trava de segurança suprema (Apenas o dono do Bot)
         if (message.author.id !== process.env.DEVELOPER_ID) return;
 
-        // ==========================================
-        // 🎯 RADAR DE ALVO (Inteligência de Busca)
-        // ==========================================
-        let targetUser = null;
+        let targetId = null;
+        let targetName = "Conta Fantasma (Excluída/Laranja)"; 
 
         // 1. Verifica se foi por "Responder" (Reply)
         if (message.reference && message.reference.messageId) {
             try {
                 const msgRespondida = await message.channel.messages.fetch(message.reference.messageId);
-                targetUser = msgRespondida.author;
-            } catch (err) {
-                console.log("[WIPE] Erro ao buscar mensagem respondida.");
-            }
+                targetId = msgRespondida.author.id;
+                targetName = msgRespondida.author.username;
+            } catch (err) {}
         } 
         // 2. Verifica se usou Menção ou ID
         else if (args[0]) {
-            const possibleId = String(args[0]).replace(/[^0-9]/g, '');
-            if (possibleId.length >= 15) {
-                try {
-                    targetUser = await message.client.users.fetch(possibleId);
-                } catch (err) {
-                    // Ignora o erro e avisa lá embaixo
-                }
-            }
+            targetId = String(args[0]).replace(/[^0-9]/g, '');
         }
 
-        // Se o radar não achar ninguém, bloqueia o comando
-        if (!targetUser) {
-            return message.reply('❌ **Alvo não encontrado!** Responda uma mensagem do cara, marque o `@` dele ou digite o ID numérico.');
+        // Se o radar não achar um ID válido, bloqueia
+        if (!targetId || targetId.length < 15) {
+            return message.reply('❌ **ID inválido ou Alvo não encontrado!** Responda uma mensagem, marque o `@` ou digite um ID numérico correto.');
         }
 
-        if (targetUser.bot) {
-            return message.reply('🤖 **Negado:** Não faz sentido dar Wipe num Bot.');
+        // Tenta achar na API do Discord só pra ter o nome original (se não achar, a gente ignora o erro)
+        try {
+            const fetchedUser = await message.client.users.fetch(targetId);
+            targetName = fetchedUser.username;
+            if (fetchedUser.bot) return message.reply('🤖 **Negado:** Não faz sentido dar Wipe num Bot.');
+        } catch (error) {
+            console.log(`[WIPE] Alvo ${targetId} não existe no Discord. Wipando direto no banco de dados.`);
         }
 
         try {
-            // Verifica se a conta existe no banco
-            const conta = await prisma.user.findUnique({ where: { userId: targetUser.id } });
+            // Verifica se a conta existe no BANCO DE DADOS da Engine (Isso é o que importa)
+            const conta = await prisma.user.findUnique({ where: { userId: targetId } });
             
             if (!conta) {
-                return message.reply(`❌ O usuário **${targetUser.username}** não tem registro na Kibo Engine.`);
+                return message.reply(`❌ A conta de ID **${targetId}** não possui saldo ou registro no Banco de Dados.`);
             }
 
             // ==========================================
-            // 🚨 OPERAÇÃO DE WIPE (Reset Absoluto)
+            // 🚨 OPERAÇÃO DE WIPE MODO TRATOR
             // ==========================================
             
-            // 1. Zera completamente a economia definindo um valor fixo absoluto (0)
+            // 1. Zera a economia absoluta
             await prisma.user.update({
-                where: { userId: targetUser.id },
-                data: {
-                    balance: 0,
-                    bank: 0
-                }
+                where: { userId: targetId },
+                data: { balance: 0, bank: 0 }
             });
 
-            // 2. Confisca todos os itens (Apaga o Inventário do Alvo)
+            // 2. Confisca todos os itens do Inventário
             await prisma.inventory.deleteMany({
-                where: { userId: targetUser.id }
+                where: { userId: targetId }
             });
 
-            // Retorno triunfal no chat
-            return message.reply(`# 🚨 DECRETO DE FALÊNCIA ACIONADO!\nO usuário **${targetUser.username}** *(ID: \`${targetUser.id}\`)* teve todos os seus bens confiscados pela Receita Federal da Kibo Engine!\n\n> 💸 **Nova Carteira:** $0\n> 🏦 **Novo Banco:** $0\n> 🎒 **Inventário:** Vazio (Confiscado)\n\n*A conta foi resetada aos padrões de fábrica e ele voltou a ser um indigente na rua.*`);
+            return message.reply(`# 🚨 DECRETO DE FALÊNCIA ACIONADO!\nA conta **${targetName}** *(ID: \`${targetId}\`)* foi rastreada e teve todos os seus bens confiscados!\n\n> 💸 **Nova Carteira:** $0\n> 🏦 **Novo Banco:** $0\n> 🎒 **Inventário:** Vazio (Confiscado)\n\n*A anomalia foi corrigida no banco de dados com sucesso.*`);
 
         } catch (error) {
             console.error('[ERRO NO WIPE]', error);
-            return message.reply('❌ **Erro Crítico:** Ocorreu uma falha no banco de dados ao tentar aplicar o Wipe.');
+            return message.reply('❌ **Erro Crítico:** Ocorreu uma falha no Prisma ao tentar aplicar o Wipe.');
         }
     }
 };
