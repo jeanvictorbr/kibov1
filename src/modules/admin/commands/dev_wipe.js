@@ -3,8 +3,12 @@ import { prisma } from '../../../core/database.js';
 export default {
     name: 'dev_wipe',
     execute: async (message, args) => {
-        // Trava de segurança suprema (Apenas o dono do Bot)
-        if (message.author.id !== process.env.DEVELOPER_ID) return;
+        // ==========================================
+        // 🛑 TRAVA DE SEGURANÇA SUPREMA
+        // ==========================================
+        if (message.author.id !== process.env.DEVELOPER_ID) {
+            return message.reply('🛑 **ACESSO NEGADO!**\n> Tá achando que é o dono da Kibo Engine, malandro? Esse comando é confidencial e de uso exclusivo da diretoria. Sai pra lá!');
+        }
 
         let targetId = null;
         let targetName = "Conta Fantasma (Excluída/Laranja)"; 
@@ -19,11 +23,9 @@ export default {
         } 
         else {
             // 2. 🔥 BYPASS NO SISTEMA: IGNORA O `args` CORROMPIDO!
-            // Vasculha o texto puro que você digitou em busca de 15 a 20 números seguidos.
-            // Assim o JavaScript não arredonda o ID pra zero.
             const rawIdMatch = message.content.match(/\d{15,20}/);
             if (rawIdMatch) {
-                targetId = rawIdMatch[0]; // Pega o ID idêntico ao que você digitou
+                targetId = rawIdMatch[0];
             }
         }
 
