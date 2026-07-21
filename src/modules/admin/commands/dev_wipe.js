@@ -17,17 +17,22 @@ export default {
                 targetName = msgRespondida.author.username;
             } catch (err) {}
         } 
-        // 2. Verifica se usou Menção ou ID
-        else if (args[0]) {
-            targetId = String(args[0]).replace(/[^0-9]/g, '');
+        else {
+            // 2. 🔥 BYPASS NO SISTEMA: IGNORA O `args` CORROMPIDO!
+            // Vasculha o texto puro que você digitou em busca de 15 a 20 números seguidos.
+            // Assim o JavaScript não arredonda o ID pra zero.
+            const rawIdMatch = message.content.match(/\d{15,20}/);
+            if (rawIdMatch) {
+                targetId = rawIdMatch[0]; // Pega o ID idêntico ao que você digitou
+            }
         }
 
         // Se o radar não achar um ID válido, bloqueia
-        if (!targetId || targetId.length < 15) {
+        if (!targetId) {
             return message.reply('❌ **ID inválido ou Alvo não encontrado!** Responda uma mensagem, marque o `@` ou digite um ID numérico correto.');
         }
 
-        // Tenta achar na API do Discord só pra ter o nome original (se não achar, a gente ignora o erro)
+        // Tenta achar na API do Discord só pra ter o nome original (se não achar, a gente ignora)
         try {
             const fetchedUser = await message.client.users.fetch(targetId);
             targetName = fetchedUser.username;
@@ -37,16 +42,12 @@ export default {
         }
 
         try {
-            // Verifica se a conta existe no BANCO DE DADOS da Engine (Isso é o que importa)
+            // Verifica se a conta existe no BANCO DE DADOS
             const conta = await prisma.user.findUnique({ where: { userId: targetId } });
             
             if (!conta) {
                 return message.reply(`❌ A conta de ID **${targetId}** não possui saldo ou registro no Banco de Dados.`);
             }
-
-            // ==========================================
-            // 🚨 OPERAÇÃO DE WIPE MODO TRATOR
-            // ==========================================
             
             // 1. Zera a economia absoluta
             await prisma.user.update({
