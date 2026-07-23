@@ -19,7 +19,6 @@ export default {
         const buffer = await generateCryptoHub(interaction.user);
         const attachment = new AttachmentBuilder(buffer, { name: 'crypto_hub.png' });
 
-        // Agora o botão de voltar reconstrói o menu completo com os 3 botões!
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('crypto_market').setLabel('Ver Mercado').setStyle(ButtonStyle.Primary),
             new ButtonBuilder().setCustomId('crypto_wallet').setLabel('Acessar Cofre').setStyle(ButtonStyle.Secondary),
@@ -27,7 +26,12 @@ export default {
             new ButtonBuilder().setCustomId('crypto_tutorial').setLabel('📘 Tutorial').setStyle(ButtonStyle.Secondary)
         );
 
-        // Limpa o texto da mensagem (caso o cara estivesse num terminal de compra) e volta pro Hub
-        await interaction.update({ content: '', files: [attachment], components: [row] });
+        // 🧹 LIMPEZA TOTAL: Remove o content, remove os embeds antigos, remove selects extras e exibe apenas a imagem limpa do Hub com os botões!
+        await interaction.update({ 
+            content: '', 
+            embeds: [], 
+            files: [attachment], 
+            components: [row] 
+        });
     }
 };
