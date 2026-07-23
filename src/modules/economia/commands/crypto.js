@@ -13,7 +13,8 @@ export default {
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('crypto_market').setLabel('Ver Cotação Geral').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('crypto_wallet').setLabel('Acessar Cofre').setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId('crypto_wallet').setLabel('Acessar Cofre').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('crypto_news').setLabel('📰 Kibo News').setStyle(ButtonStyle.Success) // BOTÃO NOVO
         );
 
         message.reply({ 

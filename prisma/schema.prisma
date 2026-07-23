@@ -101,14 +101,23 @@ model CryptoMarket {
 }
 
 model CryptoWallet {
-  userId    String   @id
-  BTK       Float    @default(0)
-  ETHK      Float    @default(0)
-  KBC       Float    @default(0)
-  SOLK      Float    @default(0)
-  DGK       Float    @default(0)
-  SHBK      Float    @default(0)
-  KBD       Float    @default(0) // KiboDiamond (Nova)
-  QTK       Float    @default(0) // QuantumKibo (Nova)
-  KBG       Float    @default(0) // KiboGold (Nova)
+  userId        String   @id
+  KBD           Float    @default(0)
+  KBD_inv       Float    @default(0)
+  QTK           Float    @default(0)
+  QTK_inv       Float    @default(0)
+  KBG           Float    @default(0)
+  KBG_inv       Float    @default(0)
+  BTK           Float    @default(0)
+  BTK_inv       Float    @default(0)
+  ETHK          Float    @default(0)
+  ETHK_inv      Float    @default(0)
+  KBC           Float    @default(0)
+  KBC_inv       Float    @default(0)
+  SOLK          Float    @default(0)
+  SOLK_inv      Float    @default(0)
+  DGK           Float    @default(0)
+  DGK_inv       Float    @default(0)
+  SHBK          Float    @default(0)
+  SHBK_inv      Float    @default(0)
 }
