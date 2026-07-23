@@ -108,4 +108,7 @@ model CryptoWallet {
   SOLK      Float    @default(0)
   DGK       Float    @default(0)
   SHBK      Float    @default(0)
+  KBD       Float    @default(0) // KiboDiamond (Nova)
+  QTK       Float    @default(0) // QuantumKibo (Nova)
+  KBG       Float    @default(0) // KiboGold (Nova)
 }

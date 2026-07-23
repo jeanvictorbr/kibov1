@@ -5,41 +5,32 @@ import { getMarket } from '../../../utils/cryptoMarket.js';
 export default {
     customId: 'crypto_market',
     execute: async (interaction) => {
-        // ==========================================
-        // 🔒 FECHADURA BIOMÉTRICA (ANTI-INTROMETIDOS)
-        // ==========================================
+        // 🔒 FECHADURA BIOMÉTRICA
         try {
-            // Busca a mensagem original que o bot respondeu
             const originalMsg = await interaction.channel.messages.fetch(interaction.message.reference.messageId);
-            
-            // Se o ID de quem clicou for diferente de quem deu o comando k crypto...
             if (interaction.user.id !== originalMsg.author.id) {
-                return interaction.reply({ 
-                    content: '🛑 **ACESSO NEGADO!** Você não tem permissão para operar no terminal de outro jogador. Digite `k crypto` para abrir a sua própria Exchange.', 
-                    ephemeral: true // Só o intrometido vê esse esporro
-                });
+                return interaction.reply({ content: '🛑 **ACESSO NEGADO!** Esse terminal pertence a outro investidor.', ephemeral: true });
             }
         } catch (err) {
-            // Se a mensagem original foi deletada, trava tudo por segurança
-            return interaction.reply({ 
-                content: '❌ **Erro de Sessão:** A mensagem original não foi encontrada. Digite o comando novamente.', 
-                ephemeral: true 
-            });
+            return interaction.reply({ content: '❌ **Erro de Sessão.**', ephemeral: true });
         }
-        // ==========================================
+
         const market = await getMarket();
         const buffer = await generateCryptoMarket(market);
         const attachment = new AttachmentBuilder(buffer, { name: 'crypto_market.png' });
 
-        // Cria o Menu Dropdown para Análise Detalhada
+        // Menu Dropdown com as 9 Moedas
         const selectMenu = new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
                 .setCustomId('crypto_view_coin')
                 .setPlaceholder('Analisar Gráfico de uma Moeda Específica')
                 .addOptions([
-                    { label: 'BitKibo (BTK)', value: 'BTK', description: 'Ouro Digital' },
+                    { label: 'KiboDiamond (KBD)', value: 'KBD', description: 'Ativo de Luxo Supremo' },
+                    { label: 'QuantumKibo (QTK)', value: 'QTK', description: 'Tecnologia Avançada' },
+                    { label: 'KiboGold (KBG)', value: 'KBG', description: 'Reserva de Ouro Seguro' },
+                    { label: 'BitKibo (BTK)', value: 'BTK', description: 'Ouro Digital Clássico' },
                     { label: 'EtherKibo (ETHK)', value: 'ETHK', description: 'Investimento Seguro' },
-                    { label: 'KiboCoin (KBC)', value: 'KBC', description: 'Moeda Oficial' },
+                    { label: 'KiboCoin (KBC)', value: 'KBC', description: 'Moeda Oficial da Engine' },
                     { label: 'SolanaKibo (SOLK)', value: 'SOLK', description: 'Volatilidade Alta' },
                     { label: 'DogeKibo (DGK)', value: 'DGK', description: 'Meme Coin' },
                     { label: 'ShibaKibo (SHBK)', value: 'SHBK', description: 'Meme Loteria' },
