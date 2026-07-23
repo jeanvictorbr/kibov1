@@ -87,3 +87,25 @@ model GuildConfig {
   casinoEnabled Boolean  @default(true)
   delegadoId    String?  // NOVO: A coluna do delegado fundida aqui!
 }
+
+// ==========================================
+// 📈 SISTEMA DE CRIPTOMOEDAS (KIBO EXCHANGE)
+// ==========================================
+
+model CryptoMarket {
+  coin      String   @id // Ex: 'BTK', 'KBC'
+  name      String
+  price     Float
+  lastPrice Float
+  updatedAt DateTime @default(now())
+}
+
+model CryptoWallet {
+  userId    String   @id
+  BTK       Float    @default(0)
+  ETHK      Float    @default(0)
+  KBC       Float    @default(0)
+  SOLK      Float    @default(0)
+  DGK       Float    @default(0)
+  SHBK      Float    @default(0)
+}
