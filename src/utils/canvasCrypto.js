@@ -69,11 +69,15 @@ export async function generateCryptoMarket(market) {
     } return canvas.toBuffer();
 }
 
-// 3. ANÁLISE DE MOEDA (COM PREÇO MÉDIO E P&L)
+// ==========================================
+// 3. ANÁLISE DE MOEDA (COM PROTEÇÃO ANTI-INFINITY)
+// ==========================================
 export async function generateCoinChart(coinData, userAmount = 0, userInvested = 0) {
-    const canvas = createCanvas(800, 450); const ctx = canvas.getContext('2d');
+    const canvas = createCanvas(800, 450); 
+    const ctx = canvas.getContext('2d');
     const change = ((coinData.price - coinData.lastPrice) / coinData.lastPrice) * 100;
-    const isUp = change >= 0; const themeColor = isUp ? '#00FF66' : '#FF3366';
+    const isUp = change >= 0; 
+    const themeColor = isUp ? '#00FF66' : '#FF3366';
 
     ctx.fillStyle = '#0B0D14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.shadowBlur = 15; ctx.shadowColor = themeColor; ctx.fillStyle = themeColor;
@@ -87,19 +91,28 @@ export async function generateCoinChart(coinData, userAmount = 0, userInvested =
     // CAIXA DE ATIVOS & PREÇO MÉDIO
     ctx.fillStyle = '#1A1E29'; roundRect(ctx, 40, 180, 320, 230, 10, true, false);
     ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 18px sans-serif'; ctx.fillText('SEUS ATIVOS (WALLET):', 60, 210);
-    ctx.fillStyle = '#FFFFFF'; ctx.font = '22px sans-serif'; ctx.fillText(`${userAmount.toLocaleString('pt-BR')} ${coinData.coin}`, 60, 240);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 22px sans-serif'; ctx.fillText(`${userAmount.toLocaleString('pt-BR')} ${coinData.coin}`, 60, 240);
 
     if (userAmount > 0) {
         const avgPrice = userInvested / userAmount;
-        const profitPct = ((coinData.price - avgPrice) / avgPrice) * 100;
-        const isProfit = profitPct >= 0;
-        const pnlColor = isProfit ? '#00FF66' : '#FF3366';
-        const pnlSign = isProfit ? '+' : '';
-
         ctx.fillStyle = '#AAAAAA'; ctx.font = '16px sans-serif'; ctx.fillText(`Preco Medio Pago:`, 60, 290);
-        ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(`$${avgPrice.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 60, 315);
-        ctx.fillStyle = '#AAAAAA'; ctx.font = '16px sans-serif'; ctx.fillText(`Retorno do Investimento:`, 60, 355);
-        ctx.fillStyle = pnlColor; ctx.font = 'bold 22px sans-serif'; ctx.fillText(`${pnlSign}${profitPct.toFixed(2)}%`, 60, 385);
+
+        // 🐛 CORREÇÃO DO BUG INFINITY AQUI!
+        if (avgPrice > 0) {
+            const profitPct = ((coinData.price - avgPrice) / avgPrice) * 100;
+            const isProfit = profitPct >= 0;
+            const pnlColor = isProfit ? '#00FF66' : '#FF3366';
+            const pnlSign = isProfit ? '+' : '';
+
+            ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(`$${avgPrice.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 60, 315);
+            ctx.fillStyle = '#AAAAAA'; ctx.font = '16px sans-serif'; ctx.fillText(`Retorno do Investimento:`, 60, 355);
+            ctx.fillStyle = pnlColor; ctx.font = 'bold 22px sans-serif'; ctx.fillText(`${pnlSign}${profitPct.toFixed(2)}%`, 60, 385);
+        } else {
+            // Caso a moeda seja antiga ou ganhada de graça (Valor Investido = 0)
+            ctx.fillStyle = '#00FF66'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(`Custo Zero (Bonus/Antigo)`, 60, 315);
+            ctx.fillStyle = '#AAAAAA'; ctx.font = '16px sans-serif'; ctx.fillText(`Retorno do Investimento:`, 60, 355);
+            ctx.fillStyle = '#00FF66'; ctx.font = 'bold 22px sans-serif'; ctx.fillText(`+100% (Lucro Puro)`, 60, 385);
+        }
     } else {
         ctx.fillStyle = '#AAAAAA'; ctx.font = '16px sans-serif'; ctx.fillText(`Voce nao possui fundos`, 60, 300); ctx.fillText(`neste ativo.`, 60, 325);
     }
@@ -119,7 +132,6 @@ export async function generateCoinChart(coinData, userAmount = 0, userInvested =
 
     return canvas.toBuffer();
 }
-
 // 4. CARTEIRA E RECIBO (Mantidos, mas com taxas no Recibo)
 export async function generateCryptoWallet(user, wallet, market) {
     const canvas = createCanvas(800, 750); const ctx = canvas.getContext('2d');
@@ -167,55 +179,136 @@ export async function generateCryptoReceipt(user, action, coin, amount, grossVal
     return canvas.toBuffer();
 }
 
-// 5. O SISTEMA DE NOTÍCIAS DINÂMICO (JORNAL CYBERPUNK)
+// ==========================================
+// 5. O SISTEMA DE NOTÍCIAS DINÂMICO (MONSTER KIBO NEWS)
+// ==========================================
 export async function generateCryptoNews(market) {
-    const canvas = createCanvas(800, 400); const ctx = canvas.getContext('2d');
+    // 📈 Aumentamos o canvas para 800x600 para dar muito espaço!
+    const canvas = createCanvas(800, 600); 
+    const ctx = canvas.getContext('2d');
     
     // Calcula quem mais subiu e quem mais desceu
     const changes = market.map(m => { return { ...m, pct: ((m.price - m.lastPrice) / m.lastPrice) * 100 } }).sort((a, b) => b.pct - a.pct);
-    const topGainer = changes[0]; const topLoser = changes[changes.length - 1];
-    const timestamp = new Date(market[0].updatedAt);
+    const topGainer = changes[0]; 
+    const topLoser = changes[changes.length - 1];
     
-    // O Seed garante que a notícia será a mesma durante aqueles 10 minutos
+    const timestamp = new Date(market[0].updatedAt);
     const seed = timestamp.getMinutes() + timestamp.getHours() + timestamp.getDate();
     
+    // Dezenas de Manchetes Épicas
     const gainerHeadlines = [
-        `Escassez na rede faz {coin} disparar sem freio!`,
-        `Baleias asiaticas compram milhoes em {coin}!`,
-        `Governo legaliza {coin} e mercado entra em euforia!`,
-        `Novo protocolo na blockchain leva {coin} pra lua!`,
-        `Influenciadores causam PUMP massivo na {coin}!`
+        `Escassez na rede faz ${topGainer.name} disparar sem freio!`,
+        `Baleias asiaticas compram milhoes em ${topGainer.name}!`,
+        `Governo legaliza ${topGainer.name} e mercado entra em euforia!`,
+        `Novo protocolo na blockchain leva ${topGainer.name} pra lua!`,
+        `Influenciadores causam PUMP massivo na ${topGainer.name}!`,
+        `Fundo de investimento injeta bilhoes na ${topGainer.name}.`,
+        `Atualizacao historica faz ${topGainer.name} quebrar recordes!`
     ];
     const loserHeadlines = [
-        `Escandalo de corrupcao faz {coin} derreter!`,
-        `Ataque Hacker rouba fundos e afunda a {coin}.`,
-        `Governo proibe {coin} e gera panico global!`,
-        `Baleia despeja tudo e {coin} sofre crash violento.`,
-        `Fundadores fogem com dinheiro da {coin} (RUG PULL)!`
+        `Escandalo de corrupcao faz ${topLoser.name} derreter!`,
+        `Ataque Hacker rouba fundos e afunda a ${topLoser.name}.`,
+        `Governo proibe ${topLoser.name} e gera panico global!`,
+        `Baleia despeja tudo e ${topLoser.name} sofre crash violento.`,
+        `Fundadores fogem com dinheiro da ${topLoser.name} (RUG PULL)!`,
+        `Falha na rede faz ${topLoser.name} perder confianca dos investidores.`,
+        `Processo judicial derruba acoes da ${topLoser.name} no mercado.`
     ];
 
-    const gHeadline = gainerHeadlines[seed % gainerHeadlines.length].replace('{coin}', topGainer.name);
-    const lHeadline = loserHeadlines[seed % loserHeadlines.length].replace('{coin}', topLoser.name);
+    const gHeadline = gainerHeadlines[seed % gainerHeadlines.length];
+    const lHeadline = loserHeadlines[seed % loserHeadlines.length];
 
-    ctx.fillStyle = '#0B0D14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 🎨 Fundo Imersivo (Degradê)
+    const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+    gradient.addColorStop(0, '#0B0D14');
+    gradient.addColorStop(1, '#151A28');
+    ctx.fillStyle = gradient; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 🌐 Grade Tecnológica de Fundo (Tech Grid)
+    ctx.strokeStyle = 'rgba(42, 46, 61, 0.5)';
+    ctx.lineWidth = 1;
+    for(let i = 0; i < 800; i += 40) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 600); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(800, i); ctx.stroke();
+    }
     
-    ctx.fillStyle = '#1A1E29'; ctx.fillRect(0, 0, 800, 60);
-    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 30px sans-serif'; ctx.fillText('📰 KIBO NEWS | BOLETIM DE MERCADO', 20, 40);
+    // 📰 CABEÇALHO (Top Bar News)
+    ctx.fillStyle = '#12151F'; ctx.fillRect(0, 0, 800, 80);
+    ctx.fillStyle = '#00F2FE'; ctx.fillRect(0, 80, 800, 3); // Linha neon azul
+
+    ctx.shadowBlur = 15; ctx.shadowColor = '#FFFFFF';
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 38px sans-serif'; 
+    ctx.fillText('KIBO NEWS', 40, 55); 
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#AAAAAA'; ctx.font = '22px sans-serif'; 
+    ctx.fillText('| BOLETIM DE MERCADO', 260, 52);
     
+    // ⏰ Hora alinhada perfeitamente na direita para não atropelar o título!
     const timeStr = `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
-    ctx.fillStyle = '#00F2FE'; ctx.font = '20px sans-serif'; ctx.fillText(`Atualizado as ${timeStr}`, 580, 40);
+    ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 20px sans-serif'; 
+    ctx.textAlign = 'right';
+    ctx.fillText(`ATUALIZADO AS ${timeStr}`, 760, 52);
+    ctx.textAlign = 'left'; // Reseta o alinhamento
 
-    // Bloco Alta
-    ctx.fillStyle = '#00FF66'; ctx.font = 'bold 24px sans-serif'; ctx.fillText('🚀 DESTAQUE DE ALTA', 40, 110);
-    ctx.fillStyle = '#12151F'; ctx.strokeStyle = '#00FF66'; ctx.lineWidth = 2; roundRect(ctx, 40, 130, 720, 80, 10, true, true);
-    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 22px sans-serif'; ctx.fillText(gHeadline, 60, 175);
-    ctx.fillStyle = '#00FF66'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(`+${topGainer.pct.toFixed(2)}%`, 630, 178);
+    // 🧠 NOVO: SENTIMENTO DE MERCADO
+    let totalPct = 0;
+    market.forEach(m => totalPct += ((m.price - m.lastPrice) / m.lastPrice) * 100);
+    const isBull = totalPct >= 0;
+    const sentimentText = isBull ? 'OTIMISMO (BULLISH)' : 'MEDO GLOBAL (BEARISH)';
+    const sentimentColor = isBull ? '#00FF66' : '#FF3366';
 
-    // Bloco Baixa
-    ctx.fillStyle = '#FF3366'; ctx.font = 'bold 24px sans-serif'; ctx.fillText('🔻 DESTAQUE DE QUEDA', 40, 260);
-    ctx.fillStyle = '#12151F'; ctx.strokeStyle = '#FF3366'; ctx.lineWidth = 2; roundRect(ctx, 40, 280, 720, 80, 10, true, true);
-    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 22px sans-serif'; ctx.fillText(lHeadline, 60, 325);
-    ctx.fillStyle = '#FF3366'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(`${topLoser.pct.toFixed(2)}%`, 630, 328);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 20px sans-serif'; 
+    ctx.fillText('SENTIMENTO GLOBAL:', 40, 140);
+    ctx.fillStyle = sentimentColor; 
+    ctx.fillText(sentimentText, 270, 140);
+
+    // ==========================================
+    // 🚀 BLOCO DE ALTA 
+    // ==========================================
+    ctx.fillStyle = '#00FF66'; ctx.font = 'bold 26px sans-serif'; 
+    ctx.fillText('DESTAQUE DE ALTA', 75, 210);
+    drawArrow(ctx, 50, 202, 12, true); // Seta desenhada nativamente (sem emojis)
+
+    // Caixa de destaque
+    ctx.fillStyle = '#12151F'; ctx.strokeStyle = '#00FF66'; ctx.lineWidth = 2; 
+    roundRect(ctx, 40, 230, 720, 110, 12, true, true);
+    
+    // Manchete (Com trava de tamanho maxWidth: 510 para não invadir o emblema)
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 24px sans-serif'; 
+    ctx.fillText(gHeadline, 65, 295, 510);
+    
+    // Badge (Crachá) da Porcentagem Isolado
+    ctx.fillStyle = '#00FF66'; 
+    roundRect(ctx, 590, 255, 150, 60, 8, true, false);
+    ctx.fillStyle = '#0B0D14'; ctx.font = 'bold 26px sans-serif'; 
+    ctx.textAlign = 'center';
+    ctx.fillText(`+${topGainer.pct.toFixed(2)}%`, 665, 295);
+    ctx.textAlign = 'left';
+
+    // ==========================================
+    // 🔻 BLOCO DE QUEDA 
+    // ==========================================
+    ctx.fillStyle = '#FF3366'; ctx.font = 'bold 26px sans-serif'; 
+    ctx.fillText('DESTAQUE DE QUEDA', 75, 410);
+    drawArrow(ctx, 50, 402, 12, false); // Seta desenhada nativamente
+
+    // Caixa de destaque
+    ctx.fillStyle = '#12151F'; ctx.strokeStyle = '#FF3366'; ctx.lineWidth = 2; 
+    roundRect(ctx, 40, 430, 720, 110, 12, true, true);
+    
+    // Manchete (Com trava maxWidth: 510)
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 24px sans-serif'; 
+    ctx.fillText(lHeadline, 65, 495, 510);
+    
+    // Badge (Crachá) da Porcentagem Isolado
+    ctx.fillStyle = '#FF3366'; 
+    roundRect(ctx, 590, 455, 150, 60, 8, true, false);
+    ctx.fillStyle = '#0B0D14'; ctx.font = 'bold 26px sans-serif'; 
+    ctx.textAlign = 'center';
+    ctx.fillText(`${topLoser.pct.toFixed(2)}%`, 665, 495);
+    ctx.textAlign = 'left';
 
     return canvas.toBuffer();
 }
