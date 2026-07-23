@@ -1,6 +1,8 @@
 import { createCanvas, loadImage } from 'canvas';
 
-// Função utilitária: Retângulo arredondado
+// ==========================================
+// FUNÇÕES UTILITÁRIAS (FORMAS GEOMÉTRICAS)
+// ==========================================
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -17,7 +19,6 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-// Função utilitária: Desenhar Triângulo (Seta de Alta/Baixa)
 function drawArrow(ctx, x, y, size, isUp) {
     ctx.beginPath();
     if (isUp) {
@@ -33,7 +34,7 @@ function drawArrow(ctx, x, y, size, isUp) {
 }
 
 // ==========================================
-// 1. TELA PRINCIPAL (HUB)
+// 1. TELA PRINCIPAL (HUB DA EXCHANGE)
 // ==========================================
 export async function generateCryptoHub(user) {
     const canvas = createCanvas(800, 400);
@@ -52,7 +53,7 @@ export async function generateCryptoHub(user) {
     ctx.fillStyle = '#F3BA2F';
     ctx.font = 'bold 48px sans-serif';
     ctx.fillText('KIBO EXCHANGE', 40, 70);
-    ctx.shadowBlur = 0; // Reseta o brilho
+    ctx.shadowBlur = 0;
 
     // Subtítulo
     ctx.fillStyle = '#FFFFFF';
@@ -75,9 +76,7 @@ export async function generateCryptoHub(user) {
     ctx.fillText('> Risco e volatilidade de ate 45% em MemeCoins.', 60, 275);
     ctx.fillText('> Seus fundos em Cripto nao podem ser roubados.', 60, 315);
 
-    // ==========================================
     // RENDERIZAR AVATAR DO USUÁRIO COM NEON
-    // ==========================================
     try {
         const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 128 });
         const avatar = await loadImage(avatarUrl);
@@ -93,7 +92,7 @@ export async function generateCryptoHub(user) {
         ctx.drawImage(avatar, avatarX - radius, avatarY - radius, radius * 2, radius * 2);
         ctx.restore();
 
-        // Borda Neon no Avatar
+        // Borda Neon
         ctx.beginPath();
         ctx.arc(avatarX, avatarY, radius, 0, Math.PI * 2, true);
         ctx.lineWidth = 5;
@@ -103,7 +102,6 @@ export async function generateCryptoHub(user) {
         ctx.stroke();
         ctx.shadowBlur = 0;
         
-        // Nome do Usuário debaixo do Avatar
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'center';
@@ -144,18 +142,15 @@ export async function generateCryptoMarket(market) {
         const color = isUp ? '#00FF66' : '#FF3366';
         const sign = isUp ? '+' : '';
 
-        // Box da moeda
         ctx.fillStyle = '#12151F';
         ctx.strokeStyle = '#2A2E3D';
         ctx.lineWidth = 1;
         roundRect(ctx, startX, startY, 340, 85, 10, true, true);
 
-        // Nome da Moeda
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 22px sans-serif';
         ctx.fillText(`${data.name} (${data.coin})`, startX + 20, startY + 35);
 
-        // Preço e Porcentagem
         ctx.fillStyle = color;
         ctx.font = 'bold 22px sans-serif';
         ctx.fillText(`$${data.price.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, startX + 45, startY + 68);
@@ -163,7 +158,6 @@ export async function generateCryptoMarket(market) {
         ctx.font = '18px sans-serif';
         ctx.fillText(`(${sign}${change.toFixed(2)}%)`, startX + 220, startY + 68);
 
-        // Desenhar Seta Visual
         ctx.fillStyle = color;
         ctx.shadowBlur = 10;
         ctx.shadowColor = color;
@@ -181,9 +175,9 @@ export async function generateCryptoMarket(market) {
 }
 
 // ==========================================
-// 3. TELA DE ANÁLISE DE MOEDA (GRÁFICO)
+// 3. TELA DE ANÁLISE DE MOEDA (GRÁFICO PERFEITO)
 // ==========================================
-export async function generateCoinChart(coinData) {
+export async function generateCoinChart(coinData, userAmount = 0) {
     const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
 
@@ -194,64 +188,68 @@ export async function generateCoinChart(coinData) {
     ctx.fillStyle = '#0B0D14';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Titulo e Info
+    // Titulo Ajustado para não cortar
     ctx.shadowBlur = 15;
     ctx.shadowColor = themeColor;
     ctx.fillStyle = themeColor;
-    ctx.font = 'bold 45px sans-serif';
+    ctx.font = 'bold 40px sans-serif';
     ctx.fillText(`${coinData.name} (${coinData.coin})`, 40, 60);
     ctx.shadowBlur = 0;
 
+    // Valores
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 30px sans-serif';
+    ctx.font = 'bold 28px sans-serif';
     ctx.fillText(`Atual: $${coinData.price.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 40, 110);
 
     ctx.fillStyle = '#AAAAAA';
-    ctx.font = '20px sans-serif';
+    ctx.font = '18px sans-serif';
     ctx.fillText(`Anterior: $${coinData.lastPrice.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 40, 140);
     
-    // Status Text
-    const statusText = isUp ? 'TENDENCIA DE ALTA (BULL MARKET)' : 'MERCADO SANGRAMENTO (BEAR MARKET)';
+    // Status Text Quebrado em duas linhas
     ctx.fillStyle = themeColor;
-    ctx.font = 'bold 18px sans-serif';
-    ctx.fillText(`STATUS: ${statusText}`, 40, 170);
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(`TENDENCIA DE MERCADO:`, 40, 180);
+    ctx.font = 'bold 20px sans-serif';
+    const statusText = isUp ? 'ALTA (BULL MARKET)' : 'QUEDA (BEAR MARKET)';
+    ctx.fillText(statusText, 40, 205);
 
-    // ==========================================
-    // DESENHAR O GRÁFICO DE LINHA NEON
-    // ==========================================
-    const graphX = 350;
+    // Caixa de Saldo do Usuário
+    ctx.fillStyle = '#1A1E29';
+    roundRect(ctx, 40, 250, 320, 80, 10, true, false);
+    ctx.fillStyle = '#00F2FE';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('SEUS ATIVOS NESTA MOEDA:', 60, 280);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '22px sans-serif';
+    ctx.fillText(`${userAmount.toLocaleString('pt-BR')} ${coinData.coin}`, 60, 310);
+
+    // GRÁFICO DE LINHA NEON (Movido e dimensionado para encaixar perfeitamente)
+    const graphX = 390; 
     const graphY = 60;
-    const graphW = 400;
+    const graphW = 360; 
     const graphH = 280;
 
-    // Fundo do gráfico
     ctx.fillStyle = '#12151F';
     ctx.strokeStyle = '#2A2E3D';
     roundRect(ctx, graphX, graphY, graphW, graphH, 10, true, true);
 
-    // Simular pontos do gráfico baseados no Last e Current Price
     const points = 6;
     const stepX = graphW / (points - 1);
     
     ctx.beginPath();
-    ctx.moveTo(graphX, graphY + graphH / 2); // Ponto inicial simulado
+    ctx.moveTo(graphX, graphY + graphH / 2);
 
     let currentX = graphX;
     for (let i = 0; i < points; i++) {
-        // Gera uma oscilação visual para o gráfico
         let randomYOffset = (Math.random() - 0.5) * 80;
         let pointY = graphY + (graphH / 2) + randomYOffset;
-        
-        // Força o último ponto a respeitar a tendência real
         if (i === points - 1) {
             pointY = isUp ? graphY + 40 : graphY + graphH - 40; 
         }
-
         ctx.lineTo(currentX, pointY);
         currentX += stepX;
     }
 
-    // Linha do gráfico
     ctx.lineWidth = 4;
     ctx.strokeStyle = themeColor;
     ctx.shadowBlur = 15;
@@ -312,17 +310,85 @@ export async function generateCryptoWallet(user, wallet, market) {
     if (!hasCoins) {
         ctx.fillStyle = '#FF3366';
         ctx.font = '22px sans-serif';
-        ctx.fillText('Seu cofre de investimentos está vazio.', 40, 150);
-        ctx.fillText('Compre moedas para ver seu patrimônio aqui.', 40, 180);
+        ctx.fillText('Seu cofre de investimentos esta vazio.', 40, 150);
+        ctx.fillText('Compre moedas para ver seu patrimonio aqui.', 40, 180);
     }
 
-    // Linha do Patrimônio Total
     ctx.fillStyle = '#1A1E29';
     roundRect(ctx, 40, 330, 720, 50, 10, true, false);
 
     ctx.fillStyle = '#F3BA2F';
     ctx.font = 'bold 26px sans-serif';
     ctx.fillText(`VALOR TOTAL EM DOLAR: $${totalUsd.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 60, 365);
+
+    return canvas.toBuffer();
+}
+
+// ==========================================
+// 5. O COMPROVANTE MAGNÍFICO (PIX DA EXCHANGE)
+// ==========================================
+export async function generateCryptoReceipt(user, action, coin, amount, totalValue, coinPrice) {
+    const canvas = createCanvas(800, 400);
+    const ctx = canvas.getContext('2d');
+
+    const isBuy = action === 'COMPRA';
+    const mainColor = isBuy ? '#00F2FE' : '#FF3366'; // Azul pra compra, Vermelho pra venda
+
+    ctx.fillStyle = '#0B0D14';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Borda Neon do Comprovante
+    ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = mainColor;
+    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+    ctx.shadowBlur = 0;
+
+    // Cabeçalho
+    ctx.fillStyle = mainColor;
+    ctx.font = 'bold 35px sans-serif';
+    ctx.fillText('COMPROVANTE DE EXECUCAO', 50, 70);
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '20px sans-serif';
+    ctx.fillText(`Operador: ${user.username.toUpperCase()}`, 50, 110);
+
+    // Linha divisória
+    ctx.fillStyle = '#2A2E3D';
+    ctx.fillRect(50, 130, 700, 2);
+
+    // Dados da Operação
+    ctx.fillStyle = '#AAAAAA';
+    ctx.font = '22px sans-serif';
+    ctx.fillText('TIPO DE ORDEM:', 50, 180);
+    ctx.fillText('ATIVO:', 50, 230);
+    ctx.fillText('QUANTIDADE:', 50, 280);
+    ctx.fillText('COTACAO DA HORA:', 50, 330);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(isBuy ? 'COMPRA (DEBITO)' : 'VENDA (CREDITO PIX)', 280, 180);
+    ctx.fillText(coin, 280, 230);
+    ctx.fillText(`${amount.toLocaleString('pt-BR')} unidades`, 280, 280);
+    ctx.fillText(`$${coinPrice.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 280, 330);
+
+    // Caixa de Valor Total
+    ctx.fillStyle = '#12151F';
+    ctx.strokeStyle = '#2A2E3D';
+    roundRect(ctx, 500, 170, 250, 150, 10, true, true);
+
+    ctx.fillStyle = mainColor;
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText(isBuy ? 'CUSTO TOTAL:' : 'LUCRO RECEBIDO:', 520, 210);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText(`$${totalValue.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`, 520, 260);
+
+    ctx.fillStyle = '#AAAAAA';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('Transacao na KiboBlockchain.', 520, 300);
 
     return canvas.toBuffer();
 }
