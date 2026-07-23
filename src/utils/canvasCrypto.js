@@ -344,3 +344,73 @@ export async function generateCryptoTop(usersList) {
     }
     return canvas.toBuffer();
 }
+
+// ==========================================
+// 7. GUIA DE SOBREVIVÊNCIA (TUTORIAL)
+// ==========================================
+export async function generateCryptoTutorial() {
+    const canvas = createCanvas(800, 750); 
+    const ctx = canvas.getContext('2d');
+    
+    // Fundo
+    const gradient = ctx.createLinearGradient(0, 0, 800, 750);
+    gradient.addColorStop(0, '#0B0D14');
+    gradient.addColorStop(1, '#151A28');
+    ctx.fillStyle = gradient; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#00F2FE';
+    ctx.fillRect(0, 0, 800, 5); // Borda topo
+
+    // Título
+    ctx.shadowBlur = 15; ctx.shadowColor = '#00F2FE';
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 40px sans-serif'; 
+    ctx.fillText('📘 MANUAL DA KIBO EXCHANGE', 40, 60);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#AAAAAA'; ctx.font = '22px sans-serif'; 
+    ctx.fillText('Tudo o que você precisa saber para não falir.', 40, 95);
+
+    // Bloco 1: A Dinâmica
+    ctx.fillStyle = '#12151F'; ctx.strokeStyle = '#2A2E3D'; ctx.lineWidth = 2; 
+    roundRect(ctx, 40, 130, 720, 130, 10, true, true);
+    ctx.fillStyle = '#F3BA2F'; ctx.font = 'bold 24px sans-serif'; ctx.fillText('🕒 A DINÂMICA DO MERCADO', 60, 170);
+    ctx.fillStyle = '#CCCCCC'; ctx.font = '20px sans-serif';
+    ctx.fillText('• O mercado global sofre oscilações a cada 10 MINUTOS.', 60, 205);
+    ctx.fillText('• Moedas comuns (KBC) oscilam pouco. Moedas meme (SHBK)', 60, 235);
+    ctx.fillText('  podem explodir ou derreter até 45% numa tacada só.', 60, 265);
+
+    // Bloco 2: Como Operar e Taxas
+    roundRect(ctx, 40, 280, 720, 130, 10, true, true);
+    ctx.fillStyle = '#00FF66'; ctx.font = 'bold 24px sans-serif'; ctx.fillText('💸 COMO LUCRAR E TAXAS (GAS FEE)', 60, 320);
+    ctx.fillStyle = '#CCCCCC'; ctx.font = '20px sans-serif';
+    ctx.fillText('• A regra é clara: Compre na baixa (🔻) e venda na alta (🚀).', 60, 355);
+    ctx.fillText('• A corretora cobra 2% de taxa sobre qualquer transação.', 60, 385);
+    ctx.fillText('• O gráfico calcula seu Preço Médio e mostra seu lucro exato!', 60, 415);
+
+    // Bloco 3: O Jornal (O Segredo)
+    roundRect(ctx, 40, 430, 720, 100, 10, true, true);
+    ctx.fillStyle = '#FF3366'; ctx.font = 'bold 24px sans-serif'; ctx.fillText('📰 O SEGREDO: KIBO NEWS', 60, 470);
+    ctx.fillStyle = '#CCCCCC'; ctx.font = '20px sans-serif';
+    ctx.fillText('• O Botão de Notícias revela tendências ocultas e justificativas', 60, 505);
+    ctx.fillText('  do porquê uma moeda específica explodiu ou derreteu.', 60, 535);
+
+    // Bloco 4: Comandos Rápidos
+    ctx.fillStyle = '#1A1E29'; ctx.strokeStyle = '#00F2FE'; 
+    roundRect(ctx, 40, 550, 720, 150, 10, true, true);
+    ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 24px sans-serif'; ctx.fillText('⌨️ TERMINAL DE COMANDOS (DAY TRADE VELOZ)', 60, 590);
+    
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('Comprar:', 60, 630);
+    ctx.fillText('Vender:', 60, 665);
+    ctx.fillText('Ranking:', 420, 630);
+
+    ctx.fillStyle = '#00FF66'; ctx.font = '20px monospace';
+    ctx.fillText('k cc <moeda> <qtd>', 170, 630); // ex: k cc BTK 10
+    ctx.fillStyle = '#FF3366';
+    ctx.fillText('k vc <moeda> <qtd|tudo>', 170, 665); // ex: k vc BTK tudo
+    ctx.fillStyle = '#F3BA2F';
+    ctx.fillText('k cryptotop', 530, 630);
+
+    return canvas.toBuffer();
+}

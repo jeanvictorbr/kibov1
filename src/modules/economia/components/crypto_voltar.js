@@ -23,7 +23,8 @@ export default {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('crypto_market').setLabel('Ver Mercado').setStyle(ButtonStyle.Primary),
             new ButtonBuilder().setCustomId('crypto_wallet').setLabel('Acessar Cofre').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('crypto_news').setLabel('📰 Kibo News').setStyle(ButtonStyle.Success)
+            new ButtonBuilder().setCustomId('crypto_news').setLabel('📰 Kibo News').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('crypto_tutorial').setLabel('📘 Tutorial').setStyle(ButtonStyle.Secondary)
         );
 
         // Limpa o texto da mensagem (caso o cara estivesse num terminal de compra) e volta pro Hub
