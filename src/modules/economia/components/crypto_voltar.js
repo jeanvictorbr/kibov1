@@ -8,8 +8,8 @@ export default {
         const attachment = new AttachmentBuilder(buffer, { name: 'crypto_hub.png' });
 
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('crypto_market').setLabel('📊 Ver Mercado').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('crypto_wallet').setLabel('💼 Minha Carteira').setStyle(ButtonStyle.Success)
+            new ButtonBuilder().setCustomId('crypto_market').setLabel('Ver Cotação Geral').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('crypto_wallet').setLabel('Acessar Cofre').setStyle(ButtonStyle.Secondary)
         );
 
         await interaction.update({ files: [attachment], components: [row] });
