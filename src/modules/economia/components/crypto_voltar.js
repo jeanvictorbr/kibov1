@@ -1,14 +1,10 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { generateCryptoHub } from '../../../utils/canvasCrypto.js';
-import { getMarket } from '../../../utils/cryptoMarket.js';
 
 export default {
-    name: 'crypto',
-    execute: async (message) => {
-        // Atualiza a virada de hora se precisar
-        await getMarket(); 
-
-        const buffer = await generateCryptoHub(message.author);
+    customId: 'crypto_voltar',
+    execute: async (interaction) => {
+        const buffer = await generateCryptoHub(interaction.user);
         const attachment = new AttachmentBuilder(buffer, { name: 'crypto_hub.png' });
 
         const row = new ActionRowBuilder().addComponents(
@@ -16,10 +12,6 @@ export default {
             new ButtonBuilder().setCustomId('crypto_wallet').setLabel('💼 Minha Carteira').setStyle(ButtonStyle.Success)
         );
 
-        message.reply({ 
-            content: `**Dica:** Use \`k cc <moeda> <qtd>\` para comprar e \`k vc <moeda> <qtd>\` para vender!`,
-            files: [attachment], 
-            components: [row] 
-        });
+        await interaction.update({ files: [attachment], components: [row] });
     }
 };
