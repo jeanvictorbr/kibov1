@@ -37,6 +37,17 @@ export default {
             `- \`k extrato\`: Puxa o papel pra ver quem te pagou ou quem te roubou.\n` +
             `- \`k rank\` ou \`k top\`: Vê quem são os maiores magnatas da cidade.`;
         } 
+        else if (escolha === 'crypto') {
+            texto = `💹 **BOLSAS DE VALORES E DAY TRADE (Kibo Exchange)**\n\n` +
+            `Quer virar baleia e fazer fortuna na alta? A bolsa de valores da Deep Web é o lugar onde os magnatas multiplicam o malote:\n\n` +
+            `- **O Painel Principal (\`k crypto\`):** Abre o terminal visual interativo com o seu avatar em neon, contendo botões de navegação fluida.\n` +
+            `- **As Cotações:** O mercado global conta com **9 moedas** (desde stablecoins e moedas oficiais até MemeCoins voláteis e as exclusivas de elite *KiboDiamond* e *QuantumKibo*).\n` +
+            `- **Atualização Automática:** Os preços mudam a cada **10 minutos**, com oscilações que podem derreter ou explodir até 45% nas MemeCoins!\n` +
+            `- **Taxa de Corretora (Gas Fee):** Toda compra ou venda cobra uma taxa de **2%** para equilibrar a economia do servidor.\n` +
+            `- **Preço Médio e Lucro:** Ao clicar em uma moeda específica, você vê o gráfico de linha em tempo real, seus ativos e a porcentagem exata de retorno do seu investimento.\n` +
+            `- **Kibo News & Hall da Fama:** Acesse o jornal cyberpunk integrado para ler notícias exclusivas do mercado ou use \`k cryptotop\` para ver o pódio com as maiores Baleias da cidade.\n` +
+            `- **Comandos Rápidos:** \`k cc <moeda> <qtd>\` para comprar e \`k vc <moeda> <qtd|tudo>\` para vender direto no Pix!`;
+        }
         else if (escolha === 'trampos') {
             texto = `🏢 **EMPREGOS E TRAMPOS (k executar)**\n\n` +
             `Usa o \`k trabalhar\` pra escolher uma profissão. Cada uma tem seu esquema quando você usa o **\`k executar\`** (pode usar a cada 10 min, ou 5 min se for VIP):\n\n` +
@@ -51,7 +62,7 @@ export default {
             `Escolheu a profissão de Ladrão? Então destravou o arsenal pesado. Pega a visão:\n\n` +
             `🧨 **O Grande Assalto (\`k assaltar_caixa\`):**\n` +
             `- Você tenta explodir um caixa pra levar de **$50k a $150k**.\n` +
-            `- O alarme toca na hora. A Polícia tem **2 MINUTOS** pra clicar no botão de impedir.\n` +
+            `- O alarme toca na hora. A Polícia tiene **2 MINUTOS** pra clicar no botão de impedir.\n` +
             `- Se a polícia clicar, rola a sorte (50% de fugir rico, 50% de ir preso). Cooldown de 20 min (5m VIP).\n\n` +
             `🚚 **Roubo ao Carro Forte (\`k carroforte\`):**\n` +
             `- O evento Endgame! Exige que você compre uma **C4 Militar** no Mercado Negro.\n` +
@@ -65,9 +76,9 @@ export default {
         else if (escolha === 'policia') {
             texto = `🚓 **A LEI E A ORDEM (Visão do PM)**\n\n` +
             `Você quer limpar a cidade? As regras do distintivo são claras:\n\n` +
-            `🔰 **A Contratação:** Você não vira PM sozinho. O Delegado da cidade tem que te dar o distintivo usando \`k contratar @seu_nome\`. Sem isso, o bot te barra.\n\n` +
+            `🔰 **A Contratação:** Você não vira PM sozinho. O Delegado da cidade tiene que te dar o distintivo usando \`k contratar @seu_nome\`. Sem isso, o bot te barra.\n\n` +
             `🚨 **O Enquadro de Rua (\`k prender @suspeito\`):**\n` +
-            `- Você só enquadra Ladrão ou Hacker. A abordagem tem **60% de chance** de sucesso.\n` +
+            `- Você só enquadra Ladrão ou Hacker. A abordagem tiene **60% de chance** de sucesso.\n` +
             `- Se prender: O cara vai pra Alcatraz por 30 mins e você confisca **10% de todo o dinheiro** dele!\n` +
             `- Se ele fugir: Você fica exausto e pega cooldown de 5 minutos sem poder prender ninguém.\n\n` +
             `🚔 **Impedindo o Caos (Botões Vermelhos):**\n` +
@@ -93,8 +104,8 @@ export default {
         }
         else if (escolha === 'social') {
             texto = `🫂 **PERFIL E RESPEITO NA RUA**\n\n` +
-            `Pra virar lenda na cidade, você tem que deixar sua marca:\n\n` +
-            `- **O Seu Registro (\`k perfil\`):** Puxa a sua ficha criminal, seu dinheiro, quantas horas você tem de rua e seu emprego atual.\n` +
+            `Pra virar lenda na cidade, você tiene que deixar sua marca:\n\n` +
+            `- **O Seu Registro (\`k perfil\`):** Puxa a sua ficha criminal, seu dinheiro, quantas horas você tiene de rua e seu emprego atual.\n` +
             `- **A Sua História (\`k bio [texto]\`):** Digita seu papo reto que vai ficar estampado no seu perfil.\n` +
             `- **Progresso (\`k habilidades\`):** Veja os níveis das suas skills, se você tá brabo no combate ou se ainda é novato.\n\n` +
             `🗯️ **Ações de Quebrada:**\n` +
@@ -104,7 +115,7 @@ export default {
         }
         else if (escolha === 'vip') {
             texto = `💎 **AS VANTAGENS DO VIP**\n\n` +
-            `Quem apoia e banca o servidor de verdade tem caminho livre pra fazer dinheiro absurdo e muito mais rápido:\n\n` +
+            `Quem apoia e banca o servidor de verdade tiene caminho livre pra fazer dinheiro absurdo e muito mais rápido:\n\n` +
             `⚡ **Sem Perder Tempo na Rua:**\n` +
             `- O tempo de descanso pra trampar no \`k executar\` cai pela metade! De 10 minutos para apenas **5 minutos**.\n\n` +
             `🧨 **O Crime Voa:**\n` +

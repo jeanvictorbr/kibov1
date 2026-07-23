@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 
 export default {
     name: 'ajuda',
+    aliases: ['help', 'comandos'],
     execute: async (message) => {
         const embed = new EmbedBuilder()
             .setTitle('📖 MANUAL DO IMPÉRIO KIBO')
@@ -10,12 +11,17 @@ export default {
             .setThumbnail(message.client.user.displayAvatarURL())
             .addFields(
                 { 
+                    name: '💹 KIBO EXCHANGE & CRYPTO (NOVO)', 
+                    value: '`k crypto` - Abre o painel visual da bolsa de valores com gráficos e cofre.\n`k comprarcrypto <moeda> <qtd>` (ou `k cc`) - Compra criptomoedas com taxas de 2%.\n`k vendercrypto <moeda> <qtd|tudo>` (ou `k vc`) - Vende ativos e recebe via Pix.\n`k cryptotop` (ou `k ctop`) - Abre o Hall da Fama com as maiores Baleias do servidor.', 
+                    inline: false 
+                },
+                { 
                     name: '💼 TRABALHOS & RPG', 
                     value: '`k trabalhar` - Escolha sua profissão.\n`k executar` - Trabalha e ganha dinheiro.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore sua Sorte e Lábia na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
                     inline: false 
                 },
                 { 
-                    name: '🔫 POLÍCIA & LADRÃO (NOVO)', 
+                    name: '🔫 POLÍCIA & LADRÃO', 
                     value: '`k assaltar_caixa` - Tenta estourar um caixa.\n`k carroforte` - Inicia o grande roubo ao Carro Forte (Requer C4).\n`k prender @user` - Dá um enquadro num criminoso (Requer ser PM).\n`k fuga` - Tenta serrar as grades de Alcatraz.\n`k subornar @PM [valor]` - Oferece grana pro PM pra sair da cadeia.', 
                     inline: false 
                 },
