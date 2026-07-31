@@ -242,6 +242,37 @@ async function takeItem(message, rest, userId) {
     if (!member) return message.reply('❌ Você não é de nenhuma facção.');
     if (member.rank === 'membro') return message.reply('❌ Só Líder e Capo podem retirar itens do estoque da facção.');
 
+    const faction = await prisma.faction.findUnique({ where: { id: member.factionId } });
+    const estoque = readEstoque(faction);
+    const itens = Object.entries(estoque).filter(([, qtd]) => qtd > 0);
+
+    // 🎒 Sem args: mostra o seletor com os itens disponíveis no estoque
+    if (rest.length === 0) {
+        if (itens.length === 0) {
+            return message.reply('📦 O estoque da facção tá vazio! Roda um `k operacao` ou os mini-jobs (`k farmar`, `k desmanchar`...) pra produzir mercadoria.');
+        }
+
+        const row = new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(`fac_pegar_${userId}`)
+                .setPlaceholder('Escolhe o item que quer retirar (1 por clique)...')
+                .addOptions(itens.map(([itemId, qtd]) => {
+                    const item = FACTION_ITEMS[itemId];
+                    const desc = item ? item.desc : itemId;
+                    return {
+                        label: `${item.emoji} ${item.name} (x${qtd})`,
+                        value: itemId,
+                        description: desc.length <= 100 ? desc : desc.slice(0, 97) + '...'
+                    };
+                }))
+        );
+
+        return message.reply({
+            content: `🎒 **RETIRAR ITEM DO ESTOQUE DA ${faction.name}** [${faction.tag}]\n\nEscolhe no menu qual mercadoria quer pro teu inventário (1 unidade por clique). Quer pegar em quantidade? Usa \`k fac pegar <item> <qtd>\`.`,
+            components: [row]
+        });
+    }
+
     const itemId = (rest[0] || '').toLowerCase();
     const numbers = rest.filter(a => typeof a === 'number');
     const qtd = Math.floor(numbers[0] || 1);
@@ -253,8 +284,6 @@ async function takeItem(message, rest, userId) {
         return message.reply('💡 Uso: `k fac pegar <item> <qtd>`\nEx: `k fac pegar droga_leve 2`');
     }
 
-    const faction = await prisma.faction.findUnique({ where: { id: member.factionId } });
-    const estoque = readEstoque(faction);
     if (!estoque[itemId] || estoque[itemId] < qtd) {
         return message.reply(`❌ Sua facção não tem **${qtd}** desse item no estoque!`);
     }

@@ -31,10 +31,10 @@ export default {
         const agilidadeLvl = skills.agilidade || 1;
         const inteligenciaLvl = skills.inteligencia || 1;
 
-        // --- COOLDOWN (base 10 min / 5 min VIP; Agilidade -4%/nv; ramo Hack -15%) ---
+        // --- COOLDOWN (base 4 min / 3 min VIP; Agilidade -4%/nv; ramo Hack -15%) ---
         const isDev = userId === DEV_ID;
         const isVip = userDb.isPremium;
-        let cooldownMinutes = (isVip ? 5 : 10) * (1 - agilidadeLvl * 0.04);
+        let cooldownMinutes = (isVip ? 3 : 4) * (1 - agilidadeLvl * 0.04);
         if (faction.ramo === 'hack') cooldownMinutes *= 0.85;
         cooldownMinutes = Math.max(1, Math.round(cooldownMinutes));
 

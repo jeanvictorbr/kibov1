@@ -31,10 +31,10 @@ export default {
         const sorteLvl = skills.sorte || 1;
         const agilidadeLvl = skills.agilidade || 1;
 
-        // Cooldown 5 min (3 min VIP); Agilidade -4%/nv
+        // Cooldown 4 min (3 min VIP); Agilidade -4%/nv
         const isDev = userId === DEV_ID;
         const isVip = userDb.isPremium;
-        const cooldownMinutes = Math.max(1, Math.round((isVip ? 3 : 5) * (1 - agilidadeLvl * 0.04)));
+        const cooldownMinutes = Math.max(1, Math.round((isVip ? 3 : 4) * (1 - agilidadeLvl * 0.04)));
 
         if (!isDev) {
             const cd = await prisma.cooldown.findUnique({
