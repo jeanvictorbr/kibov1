@@ -19,8 +19,11 @@ export async function getMemberOfUser(userId, guildId) {
     });
 }
 
-// Verifica se o user é Oficial da PM nesse servidor
+// Verifica se o user é Oficial da PM AGORA nesse servidor (o distintivo sozinho
+// não conta: quem trocou de emprego no `k trabalhar` deixou a força)
 export async function isPoliceOfficer(userId, guildId) {
+    const user = await prisma.user.findUnique({ where: { userId } });
+    if (!user || user.currentJob !== 'policial') return false;
     const badge = await prisma.policeBadge.findUnique({
         where: { userId_guildId: { userId, guildId } }
     });

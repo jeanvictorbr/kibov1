@@ -34,6 +34,11 @@ export default {
             create: { userId: userId, currentJob: selectedJob }
         });
 
+        // LARGOU A PM: devolve o distintivo da cidade (sai da força de verdade)
+        if (selectedJob !== 'policial') {
+            await prisma.policeBadge.deleteMany({ where: { userId, guildId } }).catch(() => {});
+        }
+
         // MENSAGENS NA GÍRIA SP
         let responseMsg = '';
         if (selectedJob === 'policial') responseMsg = '🚓 **Distintivo validado!** Agora você é um Oficial da PM. Mantém a quebrada limpa, chefe!';

@@ -8,10 +8,12 @@ export default {
             .setPlaceholder('Abre o manual da quebrada...')
             .addOptions([
                 { label: 'O Básico (Economia & Banco)', description: 'Como não ser roubado e guardar sua grana.', value: 'banco', emoji: '💰' },
-                { label: 'Bolsa Kibo Exchange (Crypto)', description: 'Day trade, moedas de elite, gráficos e Kibo News.', value: 'crypto', emoji: '💹' }, // ← NOVO ADICIONADO AQUI
+                { label: 'Bolsa Kibo Exchange (Crypto)', description: 'Day trade, moedas de elite, gráficos e Kibo News.', value: 'crypto', emoji: '💹' },
                 { label: 'Trampos de Rua (k executar)', description: 'Como funcionam os empregos e os riscos.', value: 'trampos', emoji: '🏢' },
+                { label: 'Facções do Submundo', description: 'Cria tua facção, produz itens e declara guerra.', value: 'faccoes', emoji: '🏴' },
                 { label: 'A Vida do Crime (Ladrão)', description: 'Assalto pesadão, Alcatraz, Fuga e Suborno.', value: 'crime', emoji: '🥷' },
                 { label: 'A Lei e a Ordem (Polícia)', description: 'Como dar o enquadro e prender vagabundo.', value: 'policia', emoji: '🚓' },
+                { label: 'Serviços & Trampos Novos', description: 'Médico, Advogado, Sequestro e Contrabando.', value: 'servicos', emoji: '🧨' },
                 { label: 'Cassino Clandestino', description: 'Tigrinho, Crash, Mines e Coinflip.', value: 'cassino', emoji: '🎰' },
                 { label: 'Mercado e Empresas', description: 'Como gerar dinheiro enquanto dorme.', value: 'lojas', emoji: '🛒' },
                 { label: 'Respeito na Rua (Social)', description: 'Habilidades, Perfil e ações com os manos.', value: 'social', emoji: '🫂' },

@@ -50,13 +50,37 @@ export default {
         }
         else if (escolha === 'trampos') {
             texto = `🏢 **EMPREGOS E TRAMPOS (k executar)**\n\n` +
-            `Usa o \`k trabalhar\` pra escolher uma profissão. Cada uma tem seu esquema quando você usa o **\`k executar\`** (pode usar a cada 10 min, ou 5 min se for VIP):\n\n` +
+            `Usa o \`k trabalhar\` pra escolher uma profissão. Cada uma tem seu esquema quando você usa o **\`k executar\`** (cooldown de 10 min, ou 5 min se for VIP):\n\n` +
             `👷 **Cidadão Honesto:** Rende de $1.000 a $3.000. **0% de Risco.** Trampo seguro.\n\n` +
-            `🚓 **Oficial de Polícia:** Rende de $2.000 a $5.000. Tem 15% de chance de dar B.O na patrulha e você gastar com médico. Libera o comando de enquadro na rua (\`k prender\`).\n\n` +
-            `🥷 **Ladrão de Rua:** Rende de $3.000 a $7.000. Tem 30% de chance de apanhar na fuga. **Libera comandos exclusivos de facção** como \`k assaltar_caixa\` e o evento do \`k carroforte\`.\n\n` +
-            `💻 **Hacker:** Rende de $4.000 a $9.000. Lucro gigante, mas tem 35% de chance de rastrearem seu IP.\n` +
-            `⏳ *Visão de futuro: Em breve a cidade vai liberar sistemas exclusivos de invasão e roubo de dados só pra quem assinou a carteira de Hacker! Aguarde.*`;
+            `🚓 **Oficial de Polícia:** Rende de $2.000 a $5.000. Tem 15% de chance de dar B.O na patrulha. **Requer distintivo do Delegado** (\`k contratar\`) e libera \`k prender\` e \`k revistar\`.\n\n` +
+            `🥷 **Ladrão de Rua:** Rende de $3.000 a $7.000. Tem 30% de chance de apanhar na fuga. **Libera comandos exclusivos** como \`k assaltar_caixa\` e o evento do \`k carroforte\`.\n\n` +
+            `💻 **Hacker:** Rende de $4.000 a $9.000. Lucro gigante, mas tem 35% de chance de rastrearem seu IP.\n\n` +
+            `🩺 **Médico:** Rende de $2.000 a $4.500. Cura os feridos do morro cobrando caro (\`k tratar @ferido [valor]\`).\n\n` +
+            `⚖️ **Advogado:** Rende de $2.500 a $5.500. Tira preso da cana com \`k advogar @preso [valor]\` — a redução de pena sobe com sua **Lábia**!\n\n` +
+            `👮 **Segurança Privado:** Rende de $3.000 a $6.000. Blinda clientes contra roubo por 30 min (\`k segurar @cliente [valor]\`).\n\n` +
+            `🧨 **Sequestrador:** Rende de $3.500 a $7.000. Rende Força! O comando \`k sequestrar @rico\` só mira em quem tem **$30.000+** na conta.\n\n` +
+            `📦 **Contrabandista:** Rende de $4.000 a $8.000. O comando \`k contrabandear\` atravessa carga suja na fronteira — **70% do lucro sai sujo** e precisa ser lavado!`;
         } 
+        else if (escolha === 'faccoes') {
+            texto = `🏴 **FACÇÕES DO SUBMUNDO**\n\n` +
+            `Cansou de trampar sozinho? Funda tua facção e domina a cidade. Se liga no desenrolo:\n\n` +
+            `📦 **Criando a Facção (\`k fac criar <nome>\`):**\n` +
+            `- Você escolhe o **ramo** no menu: 💊 Tráfico, 🔫 Armas, 💵 Lavagem, 💻 Hacking ou 🚚 Transporte.\n` +
+            `- PM não pode comandar facção! Se for Oficial, troca de emprego no \`k trabalhar\` antes.\n\n` +
+            `🎯 **Operações (\`k operacao\`):**\n` +
+            `- Roda a missão do ramo: lucra pra você, enche o **caixa** da fac e dá **XP/Influência**.\n` +
+            `- Toda operação produz a **mercadoria exclusiva** do ramo (drogas, armas, Conta de Lavagem, Script de Invasão, Mapa de Rotas) que vai pro estoque.\n` +
+            `- Esses itens podem ser **vendidos** (\`k fac vender <item> <qtd> <preco>\`) no mercado (\`k fac mercado\`) pra outras facções.\n\n` +
+            `👥 **Membros e Comando:**\n` +
+            `- \`k fac convidar @user\` (Líder/Capo), \`k fac expulsar @user\`, \`k fac promover @user\` (só Líder pra Capo), \`k fac sair\`, \`k fac dissolver\`.\n` +
+            `- \`k fac doar <valor>\` bota grana no caixa; \`k fac banco\` e \`k fac estoque\` conferem as contas.\n` +
+            `- \`k fac perfil\` mostra a ficha completa da fac em imagem; \`k fac top\` é o ranking da cidade.\n\n` +
+            `⚔️ **Guerra de Facções (\`k fac guerra @membro [valor]\`):**\n` +
+            `- Só Líder declara, com aposta de no mínimo **$20.000** (padrão $50k) que sai do caixa de cada lado.\n` +
+            `- O Líder inimigo decide nos botões. Se aceitar, a guerra dura **60 minutos**.\n` +
+            `- **Quem roubar membro da fac inimiga marca ponto!** No fim, o vencedor leva o pote (2x aposta) + 100 XP + 5 de influência.\n` +
+            `- \`k fac guerra\` (sem alvo) mostra o placar e resolve guerras que terminaram.`;
+        }
         else if (escolha === 'crime') {
             texto = `🥷 **A VIDA DO CRIME E O SUBMUNDO**\n\n` +
             `Escolheu a profissão de Ladrão? Então destravou o arsenal pesado. Pega a visão:\n\n` +
@@ -68,6 +92,13 @@ export default {
             `- O evento Endgame! Exige que você compre uma **C4 Militar** no Mercado Negro.\n` +
             `- Demora 3 minutos pro cofre abrir e os Ladrões da cidade podem entrar no bonde pra ajudar.\n` +
             `- Se a PM interceptar, rola tiro: Se o PM deitar o ladrão, ele pega **2 HORAS** de Alcatraz. Se o bonde sobreviver, dividem de $500k a $1.5 Milhão!\n\n` +
+            `🧼 **Grana Suja e Lavagem:**\n` +
+            `- Muita grana do crime entra **suja** (contrabando, operação de fac...). Você não pode gastar direto.\n` +
+            `- Use **\`k lavar <valor>\`** na lavanderia NPC (taxa de 40%) ou marque alguém de facção de **Lavagem** (\`k lavar <valor> @lavador\`) pra lavar mais barato (15%).\n` +
+            `- 🚓 **Cuidado:** A PM apreende metade da sua grana suja quando te enquadra ou te revista!\n\n` +
+            `🤕 **Ficou Ferido?:**\n` +
+            `- Falhar roubo ou operação tem 25% de chance de te deixar **ferido por 15 min**: não pode roubar/operar e trampar rende metade.\n` +
+            `- Chama um Médico (\`k tratar @medico [valor]\`) pra zerar o B.O na hora!\n\n` +
             `🔒 **A Prisão (Alcatraz):**\n` +
             `Rodou no enquadro ou no assalto? Fica sem comandos por 30 mins (ou mais). Suas saídas:\n` +
             `- **\`k fuga\`:** 30% de chance de escapar. Se falhar, toma **+15 minutos** de pena!\n` +
@@ -76,13 +107,37 @@ export default {
         else if (escolha === 'policia') {
             texto = `🚓 **A LEI E A ORDEM (Visão do PM)**\n\n` +
             `Você quer limpar a cidade? As regras do distintivo são claras:\n\n` +
-            `🔰 **A Contratação:** Você não vira PM sozinho. O Delegado da cidade tiene que te dar o distintivo usando \`k contratar @seu_nome\`. Sem isso, o bot te barra.\n\n` +
+            `🔰 **A Contratação:** Você não vira PM sozinho. O Delegado da cidade tiene que te dar o distintivo usando \`k contratar @seu_nome\`. Sem isso, o bot te barra.\n` +
+            `⚠️ **Quer sair da PM?** Troca de emprego no \`k trabalhar\` que você devolve o distintivo na hora e pode até fundar facção!\n\n` +
             `🚨 **O Enquadro de Rua (\`k prender @suspeito\`):**\n` +
-            `- Você só enquadra Ladrão ou Hacker. A abordagem tiene **60% de chance** de sucesso.\n` +
-            `- Se prender: O cara vai pra Alcatraz por 30 mins e você confisca **10% de todo o dinheiro** dele!\n` +
-            `- Se ele fugir: Você fica exausto e pega cooldown de 5 minutos sem poder prender ninguém.\n\n` +
+            `- Você só enquadra Ladrão ou Hacker. A abordagem tiene **60% de chance** de sucesso (5 min de cansaço se falhar).\n` +
+            `- Se prender: O cara vai pra Alcatraz por 1 hora e você confisca **metade de toda a grana suja** dele como evidência!\n\n` +
+            `🕵️ **A Revistada (\`k revistar @cidadão\`, 10 min):**\n` +
+            `- PM procura grana suja no bolso: 60% de achar e 30% de conseguir apreender o que achou.\n` +
+            `- Grana apreendida vira evidência (some da economia) e a Delegacia te paga um bônus!\n\n` +
             `🚔 **Impedindo o Caos (Botões Vermelhos):**\n` +
-            `Fica de olho no chat! Quando Ladrões usarem o \`k assaltar_caixa\` ou \`k carroforte\`, o Kibo vai apitar. Clica no botão de INTERCEPTAR rápido pra trocar tiro com os bandidos e faturar recompensas e salários por bravura!`;
+            `Fica de olho no chat! Quando Ladrões usarem \`k assaltar_caixa\`, \`k carroforte\` ou \`k contrabandear\`, o Kibo vai apitar. Clica no botão de INTERCEPTAR rápido pra trocar tiro com os bandidos, faturar recompensas e ainda apreender a grana suja deles!`;
+        }
+        else if (escolha === 'servicos') {
+            texto = `🧨 **SERVIÇOS E TRAMPOS NOVOS**\n\n` +
+            `As novas profissões trocam serviço entre jogadores por grana. Pega a visão de cada uma:\n\n` +
+            `🩺 **Médico (\`k tratar @ferido [valor]\`):**\n` +
+            `- Quem tá **ferido** (15 min) não pode roubar, operar nem trampar direito.\n` +
+            `- O Médico propõe o valor, o ferido aceita nos botões, e o B.O do ferimento zera na hora!\n\n` +
+            `⚖️ **Advogado (\`k advogar @preso [valor]\`):**\n` +
+            `- Tira tempo de cadeia de quem tá preso em Alcatraz.\n` +
+            `- Redução base de **30% da pena** + **3% por nível de Lábia** do advogado!\n\n` +
+            `👮 **Segurança Privado (\`k segurar @cliente [valor]\`):**\n` +
+            `- Ativa a proteção **\`protegido\` por 30 min** no cliente: ninguém consegue roubar ele no período.\n\n` +
+            `🧨 **Sequestrador (\`k sequestrar @rico\`):**\n` +
+            `- Só rende em quem tem **$30.000+** na conta (saldo da carteira, não o banco).\n` +
+            `- Resgate = **25% do saldo** (mín. $10k). A vítima tem 60s pra decidir: **paga** ou **chama a ROTA**.\n` +
+            `- Se chamar a ROTA: 50/50 — sequestrador pega **1 hora** de Alcatraz ou foge sem nada.\n` +
+            `- Cooldown de 30 min pro sequestrador.\n\n` +
+            `📦 **Contrabandista (\`k contrabandear\`):**\n` +
+            `- Lucro de **$8k a $15k**, mas **70% sai sujo** (lava com \`k lavar\`).\n` +
+            `- Se a fiscal pegar: você paga multa e a PM vê o alerta com botão de **INTERCEPTAR** por 60s.\n` +
+            `- Se a PM te alcançar: 1 hora de cadeia + apreensão de 50% da sua grana suja. Se ela cansar, fica 10 min fora.`;
         }
         else if (escolha === 'cassino') {
             texto = `🎰 **CASSINO CLANDESTINO E APOSTAS**\n\n` +
@@ -105,7 +160,7 @@ export default {
         else if (escolha === 'social') {
             texto = `🫂 **PERFIL E RESPEITO NA RUA**\n\n` +
             `Pra virar lenda na cidade, você tiene que deixar sua marca:\n\n` +
-            `- **O Seu Registro (\`k perfil\`):** Puxa a sua ficha criminal, seu dinheiro, quantas horas você tiene de rua e seu emprego atual.\n` +
+            `- **O Seu Registro (\`k perfil\`):** Puxa a sua ficha criminal, seu dinheiro, habilidades, emprego atual e — se você for de facção — o **chip da sua facção** estampado no cartão!\n` +
             `- **A Sua História (\`k bio [texto]\`):** Digita seu papo reto que vai ficar estampado no seu perfil.\n` +
             `- **Progresso (\`k habilidades\`):** Veja os níveis das suas skills, se você tá brabo no combate ou se ainda é novato.\n\n` +
             `🗯️ **Ações de Quebrada:**\n` +
