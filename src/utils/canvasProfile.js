@@ -37,7 +37,8 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     ctx.fillText(line, x, currentY);
 }
 
-export async function generateProfileCanvas(discordUser, userData) {
+// factionInfo (opcional): { name, tag, emoji, color }
+export async function generateProfileCanvas(discordUser, userData, factionInfo) {
     const canvas = createCanvas(850, 450);
     const ctx = canvas.getContext('2d');
     
@@ -83,6 +84,28 @@ export async function generateProfileCanvas(discordUser, userData) {
     ctx.shadowBlur = 15;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
     ctx.shadowBlur = 0; 
+
+    // 1b. CHIP DE FACÇÃO (se o usuário for de uma)
+    if (factionInfo) {
+        const facColor = factionInfo.color || '#FF5555';
+        ctx.font = 'bold 16px Arial';
+        let facTxt = `${factionInfo.emoji} ${factionInfo.name} [${factionInfo.tag}]`;
+        while (ctx.measureText(facTxt).width > 320 && facTxt.length > 4) {
+            facTxt = facTxt.slice(0, -3);
+        }
+        const facW = ctx.measureText(facTxt).width + 30;
+        drawRoundRect(ctx, 50, 16, facW, 26, 6);
+        ctx.fillStyle = '#11131a';
+        ctx.fill();
+        ctx.strokeStyle = facColor;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = facColor;
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = facColor;
+        ctx.fillText(facTxt, 65, 35);
+    }
 
     // 2. AVATAR CIRCULAR
     const avatarSize = 150;

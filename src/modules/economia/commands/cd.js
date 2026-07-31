@@ -11,7 +11,8 @@ export default {
         const commandsToCheck = [
             'executar', 'daily', 'mensal', 
             'int_abracar', 'int_socar', 
-            'int_dancar', 'int_morder', 'int_chutar'
+            'int_dancar', 'int_morder', 'int_chutar',
+            'operacao', 'contrabandear', 'sequestrar', 'revistar'
         ];
         
         // Busca apenas os cooldowns existentes no banco para este usuário

@@ -95,9 +95,13 @@ export default {
 
             global.activeRobberies.delete(assaltoMsg.id);
 
+            // 🧼 Metade do loot é grana suja
+            const limpo = Math.floor(robberyData.loot * 0.5);
+            const sujo = robberyData.loot - limpo;
+
             await prisma.user.update({
                 where: { userId: robberyData.robberId },
-                data: { balance: { increment: robberyData.loot } }
+                data: { balance: { increment: limpo }, dirtyMoney: { increment: sujo } }
             });
 
             const sucessos = [
@@ -111,7 +115,7 @@ export default {
             const attachmentFuga = new AttachmentBuilder(canvasFugaBuffer, { name: 'fuga.png' });
 
             // MENSAGEM PURA
-            const textoFuga = `💥 **CAIXA ESTOURADO COM SUCESSO!**\n\n${historiaSucesso}\n💰 **Lucro Limpo:** $${robberyData.loot.toLocaleString('pt-BR')} pra conta do crime!`;
+            const textoFuga = `💥 **CAIXA ESTOURADO COM SUCESSO!**\n\n${historiaSucesso}\n💰 **Lucro Total:** $${robberyData.loot.toLocaleString('pt-BR')}\n💵 **Limpo:** $${limpo.toLocaleString('pt-BR')} direto na conta\n🧼 **Sujo:** $${sujo.toLocaleString('pt-BR')} — lave com \`k lavar\`!`;
 
             await assaltoMsg.edit({ content: textoFuga, files: [attachmentFuga], components: [] }).catch(()=>{});
         }, 120000);

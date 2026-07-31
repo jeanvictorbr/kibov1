@@ -65,8 +65,10 @@ export default {
         if (chance <= 60) {
             // SUCESSO: PM ganhou
             
-            // Calcula os 10% de confisco
+            // Calcula os 10% de confisco (dinheiro limpo)
             const confisco = Math.floor(robberDb.balance * 0.10);
+            // 🧼 Apreende 50% da grana suja como evidência (vai pro estado, some de circulação)
+            const sujoApreendido = Math.floor((robberDb.dirtyMoney || 0) * 0.5);
             
             // Prende por 30 minutos e transfere o dinheiro
             const jailTime = new Date(Date.now() + 30 * 60 * 1000);
@@ -78,7 +80,7 @@ export default {
                 }),
                 prisma.user.update({
                     where: { userId: targetUser.id },
-                    data: { balance: { decrement: confisco } }
+                    data: { balance: { decrement: confisco }, dirtyMoney: { decrement: sujoApreendido } }
                 }),
                 prisma.user.update({
                     where: { userId: copId },
@@ -86,7 +88,12 @@ export default {
                 })
             ]);
 
-            return message.reply(`🚨 **BUSTEED! ENQUADRO PERFEITO!**\n\nO Oficial <@${copId}> botou a arma na cara do <@${targetUser.id}> no meio da rua!\n\n🔒 **Punição:** O vagabundo pegou 30 minutos de tranca em Alcatraz!\n💰 **Confisco:** O Oficial raspou **$${confisco.toLocaleString('pt-BR')}** (10%) da carteira do bandido e guardou no bolso!`);
+            let sujoMsg = '';
+            if (sujoApreendido > 0) {
+                sujoMsg = `\n🧼 **Grana suja:** O Oficial apreendeu **$${sujoApreendido.toLocaleString('pt-BR')}** de dinheiro sujo como evidência pra Delegacia!`;
+            }
+
+            return message.reply(`🚨 **BUSTEED! ENQUADRO PERFEITO!**\n\nO Oficial <@${copId}> botou a arma na cara do <@${targetUser.id}> no meio da rua!\n\n🔒 **Punição:** O vagabundo pegou 30 minutos de tranca em Alcatraz!\n💰 **Confisco:** O Oficial raspou **$${confisco.toLocaleString('pt-BR')}** (10%) da carteira do bandido e guardou no bolso!${sujoMsg}`);
         } else {
             // FALHA: Bandido deu fuga e PM cansa
             

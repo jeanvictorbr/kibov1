@@ -1,6 +1,13 @@
 import { AttachmentBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
 import { generateScannerImage } from '../../../utils/canvasScanner.js';
+import { FACTION_ITEMS } from '../../../utils/factionItems.js';
+
+// Busca rápida de itens de facção pelo nome
+const factionItemByName = {};
+for (const [key, cfg] of Object.entries(FACTION_ITEMS)) {
+    factionItemByName[cfg.name] = { key, ...cfg };
+}
 
 export default {
     customId: 'usar_select',
@@ -97,6 +104,32 @@ export default {
                 console.error("[ERRO SCANNER]", scannerError);
                 return interaction.followUp({ content: '❌ Ocorreu uma interferência de sinal. Tente usar novamente.', flags: [ 64 ] });
             }
+        }
+
+        // ==========================================
+        // 🧪 LÓGICA DOS ITENS DE FACÇÃO (DROGAS E ARMAS)
+        // ==========================================
+        const itemFaction = factionItemByName[itemName];
+        if (itemFaction) {
+            // 1. Consome o item
+            if (itemInstance.amount > 1) {
+                await prisma.inventory.update({ where: { id: itemInstance.id }, data: { amount: { decrement: 1 } } });
+            } else {
+                await prisma.inventory.delete({ where: { id: itemInstance.id } });
+            }
+
+            // 2. Cria o buff temporário
+            const tempoBuff = new Date(Date.now() + itemFaction.buffMin * 60 * 1000);
+            await prisma.cooldown.upsert({
+                where: { userId_command: { userId: userId, command: itemFaction.buffCooldown } },
+                update: { expiresAt: tempoBuff },
+                create: { userId: userId, command: itemFaction.buffCooldown, expiresAt: tempoBuff }
+            });
+
+            return interaction.editReply({
+                content: `# ⚡ ITEM ATIVADO\n${itemFaction.emoji} **${itemFaction.name}** consumido!\n> ${itemFaction.desc}`,
+                components: []
+            });
         }
 
         // ==========================================

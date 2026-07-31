@@ -16,13 +16,18 @@ export default {
                     inline: false 
                 },
                 { 
+                    name: '🏴 FACÇÕES (NOVO)', 
+                    value: '`k fac criar <nome>` - Funda sua facção (escolhe o ramo no menu).\n`k fac convidar @user` - Recruta (Líder/Capo).\n`k fac perfil` / `k fac top` - Veja as facções da cidade.\n`k operacao` - Execute a missão do ramo e encha o caixa da facção.\n`k fac vender` / `k fac mercado` - Venda e compre mercadoria entre facções.\n`k fac guerra @membro [valor]` - Declara guerra de facção! Quem mais roubar, leva o pote.\n`k fac guerra` - Veja o placar da guerra.', 
+                    inline: false 
+                },
+                { 
                     name: '💼 TRABALHOS & RPG', 
-                    value: '`k trabalhar` - Escolha sua profissão.\n`k executar` - Trabalha e ganha dinheiro.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore suas 6 habilidades na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
+                    value: '`k trabalhar` - Escolha sua profissão (Cidadão, Ladrão, Hacker, Polícia, Médico, Advogado, Segurança, Sequestrador ou Contrabandista).\n`k executar` - Trabalha e ganha dinheiro.\n`k tratar @ferido [valor]` - Médico cura feridos de assalto.\n`k advogar @preso [valor]` - Advogado reduz pena de quem tá na cadeia.\n`k segurar @cliente [valor]` - Segurança blinda o cliente contra roubo.\n`k sequestrar @rico` - Sequestrador cobra resgate na mão grande.\n`k contrabandear` - Contrabandista atravessa carga suja na fronteira.\n`k batercarteira` - Roubo rápido de pedestres.\n`k roubar @user` - Assalta a carteira de um jogador.\n`k habilidades` - Aprimore suas 6 habilidades na árvore de talentos.\n`k cd` - Veja seus tempos de descanso (cooldown).', 
                     inline: false 
                 },
                 { 
                     name: '🔫 POLÍCIA & LADRÃO', 
-                    value: '`k assaltar_caixa` - Tenta estourar um caixa.\n`k carroforte` - Inicia o grande roubo ao Carro Forte (Requer C4).\n`k prender @user` - Dá um enquadro num criminoso (Requer ser PM).\n`k fuga` - Tenta serrar as grades de Alcatraz.\n`k subornar @PM [valor]` - Oferece grana pro PM pra sair da cadeia.', 
+                    value: '`k assaltar_caixa` - Tenta estourar um caixa.\n`k carroforte` - Inicia o grande roubo ao Carro Forte (Requer C4).\n`k prender @user` - Dá um enquadro num criminoso (Requer ser PM). Apreende grana suja!\n`k revistar @user` - PM revira o bolso do cidadão atrás de grana suja (Requer ser PM).\n`k fuga` - Tenta serrar as grades de Alcatraz.\n`k subornar @PM [valor]` - Oferece grana pro PM pra sair da cadeia.\n`k lavar [valor] [@lavador]` - Lava sua grana suja (com facção de Lavagem é mais barato!).', 
                     inline: false 
                 },
                 { 

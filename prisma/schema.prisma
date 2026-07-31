@@ -13,6 +13,7 @@ model User {
   balance       Float    @default(0)
   bank          Float    @default(0)
   kiboCash      Float    @default(0)
+  dirtyMoney    Float    @default(0) // Grana suja que precisa ser lavada
   isPremium     Boolean  @default(false)
   vipExpiresAt  DateTime?
   skills        Json     @default("{\"sorte\": 1, \"labia\": 1, \"agilidade\": 1, \"inteligencia\": 1, \"forca\": 1, \"intimidacao\": 1}")
@@ -120,4 +121,75 @@ model CryptoWallet {
   DGK_inv       Float    @default(0)
   SHBK          Float    @default(0)
   SHBK_inv      Float    @default(0)
+}
+
+// ==========================================
+// 🏴 SISTEMA DE FACÇÕES
+// ==========================================
+
+model Faction {
+  id         String          @id @default(uuid())
+  name       String
+  tag        String
+  ramo       String          // 'trafico' | 'armas' | 'lavagem' | 'hack' | 'transporte'
+  guildId    String
+  leaderId   String
+  bank       Float           @default(0)
+  influencia Int             @default(0)
+  nivel      Int             @default(1)
+  xp         Int             @default(0)
+  estoque    Json            @default("{}") // Itens produzidos: {"droga_leve": 3, "arma_fuzil": 1}
+  createdAt  DateTime        @default(now())
+  members    FactionMember[]
+  listings   FactionListing[]
+  warsAsA    FactionWar[]    @relation("warA")
+  warsAsB    FactionWar[]    @relation("warB")
+
+  @@unique([guildId, name])
+  @@unique([guildId, tag])
+}
+
+model FactionMember {
+  id        String   @id @default(uuid())
+  factionId String
+  guildId   String
+  userId    String
+  rank      String   @default("membro") // 'lider' | 'capo' | 'membro'
+  joinedAt  DateTime @default(now())
+  faction   Faction  @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+}
+
+// Anúncio de venda de item produzido pela facção
+model FactionListing {
+  id        String   @id @default(uuid())
+  factionId String
+  guildId   String
+  itemId    String
+  qty       Int
+  price     Float
+  createdAt DateTime @default(now())
+  faction   Faction  @relation(fields: [factionId], references: [id], onDelete: Cascade)
+}
+
+// ⚔️ Guerra entre duas facções (disputa de roubos na duração, pote pro vencedor)
+model FactionWar {
+  id         String   @id @default(uuid())
+  guildId    String
+  channelId  String?
+  factionAId String
+  factionBId String
+  bet        Float    // Valor apostado POR facção (sai do caixa)
+  pointsA    Int      @default(0)
+  pointsB    Int      @default(0)
+  status     String   @default("proposta") // 'proposta' | 'ativo' | 'encerrada'
+  winnerId   String?
+  startedAt  DateTime @default(now())
+  endsAt     DateTime?
+  endedAt    DateTime?
+  createdAt  DateTime @default(now())
+
+  factionA Faction @relation("warA", fields: [factionAId], references: [id], onDelete: Cascade)
+  factionB Faction @relation("warB", fields: [factionBId], references: [id], onDelete: Cascade)
 }

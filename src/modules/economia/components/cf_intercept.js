@@ -56,8 +56,16 @@ export default {
             // Recompensa de Bravura pro PM ($15k)
             await prisma.user.update({ where: { userId: copId }, data: { balance: { increment: 15000 } } });
 
+            // 🧼 Apreende 50% da grana suja do ladrão abatido
+            const targetDb = await prisma.user.findUnique({ where: { userId: targetThiefId } });
+            const sujoSeized = Math.floor((targetDb?.dirtyMoney || 0) * 0.5);
+            if (sujoSeized > 0) {
+                await prisma.user.update({ where: { userId: targetThiefId }, data: { dirtyMoney: { decrement: sujoSeized } } });
+            }
+
             // Killfeed público no chat!
-            await interaction.reply({ content: `💥 **TIROTEIO!** O Oficial <@${copId}> flanqueou a van, deu um tiro de 12 no peito do <@${targetThiefId}> e mandou ele pra Alcatraz por **2 HORAS**!\n*(O Oficial ganhou $15.000 por bravura)*` });
+            const sujoMsg = sujoSeized > 0 ? `\n🧼 O PM apreendeu **$${sujoSeized.toLocaleString('pt-BR')}** de grana suja como evidência!` : '';
+            await interaction.reply({ content: `💥 **TIROTEIO!** O Oficial <@${copId}> flanqueou a van, deu um tiro de 12 no peito do <@${targetThiefId}> e mandou ele pra Alcatraz por **2 HORAS**!\n*(O Oficial ganhou $15.000 por bravura)*${sujoMsg}` });
 
             // SE MATOU O ÚLTIMO LADRÃO: A PM GANHOU O EVENTO
             if (data.crew.length === 0) {

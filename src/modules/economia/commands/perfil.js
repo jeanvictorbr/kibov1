@@ -1,6 +1,8 @@
 import { AttachmentBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
 import { generateProfileCanvas } from '../../../utils/canvasProfile.js';
+import { getFactionOfUser, getMemberOfUser } from '../../../utils/factionService.js';
+import { FACTIONS } from '../../../utils/factionConfig.js';
 
 export default {
     name: 'perfil',
@@ -53,8 +55,25 @@ export default {
         }
 
         try {
+            // Busca a facção do usuário (se tiver) pra exibir o chip no perfil
+            let factionInfo = null;
+            const [faction, member] = await Promise.all([
+                getFactionOfUser(targetUser.id, message.guild?.id),
+                getMemberOfUser(targetUser.id, message.guild?.id)
+            ]);
+            if (faction) {
+                const config = FACTIONS[faction.ramo];
+                factionInfo = {
+                    name: faction.name,
+                    tag: faction.tag,
+                    emoji: config.emoji,
+                    color: config.themeColor,
+                    rank: member?.rank || 'membro'
+                };
+            }
+
             // Gera o perfil visual enviando o alvo (targetUser) em vez do dono da mensagem
-            const buffer = await generateProfileCanvas(targetUser, user);
+            const buffer = await generateProfileCanvas(targetUser, user, factionInfo);
             const attachment = new AttachmentBuilder(buffer, { name: 'perfil_kibo.png' });
 
             await message.channel.send({ files: [attachment] });

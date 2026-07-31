@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ComponentType } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { prisma } from '../../../core/database.js';
 
 export default {
@@ -67,88 +67,25 @@ export default {
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-                .setCustomId('aceitar_suborno')
+                .setCustomId('subornar_action_aceitar')
                 .setLabel('💸 Pegar a Grana')
                 .setStyle(ButtonStyle.Success),
             new ButtonBuilder()
-                .setCustomId('recusar_suborno')
+                .setCustomId('subornar_action_recusar')
                 .setLabel('🛑 Recusar e Punir')
                 .setStyle(ButtonStyle.Danger)
         );
 
         const msg = await message.channel.send({ content: `<@${targetUser.id}>, encosta aqui! Tem proposta pra você.`, embeds: [embed], components: [row] });
 
-        // 6. Espera a resposta SÓ do Policial por 60 segundos
-        const filter = (i) => i.user.id === targetUser.id;
-        const collector = msg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 60000 });
+        // Registra o desenrolo pra o componente subornar_action resolver (sem conflito de collector)
+        global.activeSuborno = global.activeSuborno || new Map();
+        global.activeSuborno.set(msg.id, { robberId, copId: targetUser.id, bribeAmount, guildId });
 
-        collector.on('collect', async (i) => {
-            try {
-                // TRAVA DE TEMPO: Avisa o Discord instantaneamente que estamos processando a resposta
-                await i.deferUpdate().catch(() => {});
-
-                // Segurança dupla: verifica se o cara ainda tá preso e se tem o dinheiro
-                const checkRobber = await prisma.user.findUnique({ where: { userId: robberId } });
-                const checkJail = await prisma.cooldown.findUnique({ where: { userId_command: { userId: robberId, command: 'preso' } } });
-
-                if (!checkJail || checkJail.expiresAt < new Date()) {
-                    await i.editReply({ content: '⏳ Tarde demais! O cara já fugiu ou a pena acabou.', embeds: [], components: [] });
-                    return collector.stop();
-                }
-
-                if (!checkRobber || checkRobber.balance < bribeAmount) {
-                    await i.editReply({ content: '🤡 O vagabundo tentou dar o calote! Prometeu a grana mas a carteira tá vazia. Negócio cancelado!', embeds: [], components: [] });
-                    return collector.stop();
-                }
-
-                if (i.customId === 'aceitar_suborno') {
-                    // CORRUPÇÃO CONCLUÍDA
-                    await prisma.$transaction([
-                        prisma.user.update({ where: { userId: robberId }, data: { balance: { decrement: bribeAmount } } }),
-                        prisma.user.update({ where: { userId: targetUser.id }, data: { balance: { increment: bribeAmount } } }),
-                        prisma.cooldown.delete({ where: { userId_command: { userId: robberId, command: 'preso' } } }) // Apaga a pena!
-                    ]);
-
-                    const embedAceitou = new EmbedBuilder()
-                        .setTitle('🤝 NEGÓCIO FECHADO!')
-                        .setDescription(`O Oficial <@${targetUser.id}> olhou pros dois lados, guardou os **$${bribeAmount.toLocaleString('pt-BR')}** na bota e destrancou a porta.\n\n🔓 O <@${robberId}> tá solto na rua de novo! O sistema é sujo!`)
-                        .setColor('#00FF00');
-
-                    // Atualizado para editReply
-                    await i.editReply({ content: '💸 Fechou no sigilo.', embeds: [embedAceitou], components: [] });
-
-                } else if (i.customId === 'recusar_suborno') {
-                    // POLÍCIA RECUSOU (Sorteia punição de 2 a 8 minutos)
-                    const penaExtra = Math.floor(Math.random() * (8 - 2 + 1)) + 2;
-                    const novaPena = new Date(checkJail.expiresAt.getTime() + penaExtra * 60 * 1000);
-
-                    await prisma.cooldown.update({
-                        where: { userId_command: { userId: robberId, command: 'preso' } },
-                        data: { expiresAt: novaPena }
-                    });
-
-                    const embedRecusou = new EmbedBuilder()
-                        .setTitle('🛑 PM INCORRUPTÍVEL!')
-                        .setDescription(`O Oficial <@${targetUser.id}> deu risada da cara do <@${robberId}>, recusou a grana e bateu com o cacetete na grade!\n\n⚖️ **Punição:** O juiz sorteou mais **+${penaExtra} Minutos** na pena por tentativa de suborno!`)
-                        .setColor('#FF0000');
-
-                    // Atualizado para editReply
-                    await i.editReply({ content: '👮 A lei não tá à venda, chefe!', embeds: [embedRecusou], components: [] });
-                }
-
-                collector.stop();
-            } catch (error) {
-                // Qualquer erro aqui virava unhandled rejection e derrubava o bot inteiro
-                console.error(`[CRASH NO SUBORNO] Usuário ${i.user.id}:`, error);
-                await i.editReply({ content: '❌ Erro interno ao processar o desenrolo. Tenta de novo, chefe!', embeds: [], components: [] }).catch(() => {});
-                collector.stop();
-            }
-        });
-
-        collector.on('end', async (collected, reason) => {
-            if (reason === 'time') {
-                await msg.edit({ content: '⏳ O PM demorou pra decidir e o carcereiro chefe passou no corredor. O desenrolo melou e os dois ficaram quietos!', components: [] }).catch(() => {});
-            }
-        });
+        // Limpeza: se o PM não responder em 60s, o desenrolo mela
+        setTimeout(() => {
+            global.activeSuborno?.delete(msg.id);
+            msg.edit({ content: '⏳ O PM demorou pra decidir e o carcereiro chefe passou no corredor. O desenrolo melou e os dois ficaram quietos!', components: [] }).catch(() => {});
+        }, 60000);
     }
 };

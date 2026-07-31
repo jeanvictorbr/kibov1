@@ -127,11 +127,13 @@ export default {
                 const lootTotal = Math.floor(Math.random() * (1500000 - 500000 + 1)) + 500000;
                 const lootPorPessoa = Math.floor(lootTotal / data.crew.length);
 
-                // Paga todos os sobreviventes
+                // Paga todos os sobreviventes (🧼 metade do loot vira grana suja)
+                const limpo = Math.floor(lootPorPessoa * 0.5);
+                const sujo = lootPorPessoa - limpo;
                 for (const memberId of data.crew) {
                     await prisma.user.update({
                         where: { userId: memberId },
-                        data: { balance: { increment: lootPorPessoa } }
+                        data: { balance: { increment: limpo }, dirtyMoney: { increment: sujo } }
                     });
                 }
 
@@ -139,7 +141,7 @@ export default {
                 const attSuc = new AttachmentBuilder(canvasSuc, { name: 'cf.png' });
                 
                 let mensoes = data.crew.map(id => `<@${id}>`).join(', ');
-                const textoFinal = `💰 **BOOOM! A PORTA VOOU A 50 METROS!**\n\nA polícia comeu poeira! A C4 estourou o blindado e o bonde limpou as prateleiras de dinheiro!\n\n💸 **Loot Total:** $${lootTotal.toLocaleString('pt-BR')}\n🔥 **Sobreviventes:** ${mensoes}\n*(Cada um levou $${lootPorPessoa.toLocaleString('pt-BR')} pra casa!)*`;
+                const textoFinal = `💰 **BOOOM! A PORTA VOOU A 50 METROS!**\n\nA polícia comeu poeira! A C4 estourou o blindado e o bonde limpou as prateleiras de dinheiro!\n\n💸 **Loot Total:** $${lootTotal.toLocaleString('pt-BR')}\n🔥 **Sobreviventes:** ${mensoes}\n*(Cada um levou $${lootPorPessoa.toLocaleString('pt-BR')} — $${limpo.toLocaleString('pt-BR')} limpo e $${sujo.toLocaleString('pt-BR')} sujo pra lavar com \`k lavar\`!)*`;
 
                 await msg.edit({ content: textoFinal, files: [attSuc], components: [] }).catch(()=>{});
             }

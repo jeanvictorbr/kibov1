@@ -39,6 +39,11 @@ export default {
         if (selectedJob === 'policial') responseMsg = '🚓 **Distintivo validado!** Agora você é um Oficial da PM. Mantém a quebrada limpa, chefe!';
         else if (selectedJob === 'ladrao') responseMsg = '🥷 **Bem-vindo ao Submundo.** Você virou Ladrão. Prepara o cano e toma cuidado com a ROTA.';
         else if (selectedJob === 'hacker') responseMsg = '💻 **Sistema invadido.** Você é um Hacker. Não esquece de apagar seu IP pra não rodar.';
+        else if (selectedJob === 'medico') responseMsg = '🩺 **Plantão assumido!** Você é Médico. Sempre que alguém cair no morro, é você que costura. Cobre caro: `k tratar @ferido [valor]`.';
+        else if (selectedJob === 'advogado') responseMsg = '⚖️ **OAB na carteira!** Você é Advogado. Se um aliado rodar na cana, tira ele na lábia: `k advogar @preso [valor]`.';
+        else if (selectedJob === 'seguranca') responseMsg = '👮 **Vigilância contratada!** Você é Segurança Privado. Blinda os clientes de assalto: `k segurar @cliente [valor]`.';
+        else if (selectedJob === 'sequestrador') responseMsg = '🧨 **Plano armado!** Você é Sequestrador. Só mira em quem tem **$30.000+** na conta: `k sequestrar @rico`.';
+        else if (selectedJob === 'contrabandista') responseMsg = '📦 **Rota mapeada!** Você é Contrabandista. A mercadoria entra suja e a polícia pode cruzar seu caminho: `k contrabandear`.';
         else responseMsg = '👷 **Contrato assinado!** Você é um Cidadão Honesto. Trabalha duro e foge do crime.';
 
         await interaction.reply({ 

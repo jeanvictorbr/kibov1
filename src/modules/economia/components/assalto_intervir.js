@@ -99,12 +99,20 @@ export default {
                 data: { balance: { increment: copReward } }
             });
 
+            // 🧼 Apreende 50% da grana suja do ladrão como evidência
+            const robberDb = await prisma.user.findUnique({ where: { userId: robberId } });
+            const sujoSeized = Math.floor((robberDb?.dirtyMoney || 0) * 0.5);
+            if (sujoSeized > 0) {
+                await prisma.user.update({ where: { userId: robberId }, data: { dirtyMoney: { decrement: sujoSeized } } });
+            }
+
             const canvasPreso = await gerarCanvasAssalto(avatarUrl, 'preso', loot);
             const attachPreso = new AttachmentBuilder(canvasPreso, { name: 'resultado_preso.png' });
             const historiaSorteada = copWins[Math.floor(Math.random() * copWins.length)];
 
             // MENSAGEM PURA, SEM EMBED
-            const textoVitoria = `🚨 **${historiaSorteada.title}**\n\n${historiaSorteada.desc}\n\n🔒 **O vagabundo rodou e pegou 30 minutos em Alcatraz!**\n💰 **O Oficial faturou $${copReward.toLocaleString('pt-BR')} pelo serviço!**`;
+            const sujoMsg = sujoSeized > 0 ? `\n🧼 **Grana suja:** $${sujoSeized.toLocaleString('pt-BR')} apreendida como evidência!` : '';
+            const textoVitoria = `🚨 **${historiaSorteada.title}**\n\n${historiaSorteada.desc}\n\n🔒 **O vagabundo rodou e pegou 30 minutos em Alcatraz!**\n💰 **O Oficial faturou $${copReward.toLocaleString('pt-BR')} pelo serviço!**${sujoMsg}`;
 
             await interaction.update({ content: textoVitoria, files: [attachPreso], components: [] });
 
