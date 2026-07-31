@@ -1,4 +1,5 @@
 import { createCanvas, loadImage } from 'canvas';
+import { SKILLS, SKILL_ORDER } from './skillConfig.js';
 
 // COLOQUE AQUI O SEU ID DO DISCORD
 const CEO_IDS = ['1070658145740926987']; 
@@ -182,10 +183,10 @@ export async function generateProfileCanvas(discordUser, userData) {
     drawEconCard(310, 230, 230, 90, 'BANCO (Seguro)', userData.bank, true);
     drawEconCard(570, 230, 230, 90, 'KIBOCASH', userData.kiboCash, false);
 
-    // 6. BARRA DE HABILIDADES ORIGINAL
+    // 6. BARRA DE HABILIDADES
     const skills = typeof userData.skills === 'string' ? JSON.parse(userData.skills) : (userData.skills || {});
     
-    drawRoundRect(ctx, 50, 350, 750, 60, 10);
+    drawRoundRect(ctx, 50, 350, 750, 95, 10);
     ctx.fillStyle = '#11131a';
     ctx.fill();
     ctx.strokeStyle = '#22252c';
@@ -193,18 +194,31 @@ export async function generateProfileCanvas(discordUser, userData) {
     ctx.stroke();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(`HABILIDADES:`, 70, 387);
+    ctx.font = 'bold 15px Arial';
+    ctx.fillText(`HABILIDADES:`, 70, 378);
 
-    ctx.fillStyle = '#00FFCC';
-    ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 5;
-    ctx.fillText(`Sorte: Nível ${skills.sorte || 1}`, 340, 387);
-    ctx.shadowBlur = 0;
-    
-    ctx.fillStyle = '#FF4444';
-    ctx.shadowColor = '#FF4444'; ctx.shadowBlur = 5;
-    ctx.fillText(`Lábia: Nível ${skills.labia || 1}`, 560, 387);
-    ctx.shadowBlur = 0;
+    const skillColors = {
+        sorte: '#00FFCC',
+        labia: '#FF4444',
+        agilidade: '#FFAA00',
+        inteligencia: '#7B68EE',
+        forca: '#E91E63',
+        intimidacao: '#29B6F6'
+    };
+
+    const col1 = 245;
+    const col2 = 520;
+    const skillRows = [378, 403, 428];
+
+    ctx.font = 'bold 14px Arial';
+    SKILL_ORDER.forEach((key, i) => {
+        const col = i % 2 === 0 ? col1 : col2;
+        const row = Math.floor(i / 2);
+        ctx.fillStyle = skillColors[key];
+        ctx.shadowColor = skillColors[key]; ctx.shadowBlur = 5;
+        ctx.fillText(`${SKILLS[key].emoji} ${SKILLS[key].name}: Nível ${skills[key] || 1}`, col, skillRows[row]);
+        ctx.shadowBlur = 0;
+    });
 
     return canvas.toBuffer();
 }

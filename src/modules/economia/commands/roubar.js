@@ -38,16 +38,6 @@ export default {
         // Retorna true se o buff existir e ainda não tiver expirado
         const temImunidade = buffEspecialista && buffEspecialista.expiresAt > new Date();
 
-        // --- SISTEMA DE COOLDOWN PADRÃO (5 MINUTOS) ---
-        const cooldownTime = 5 * 60 * 1000; 
-        const lastRobbery = cooldowns.get(message.author.id);
-
-        // Só barra o cara se ele NÃO tiver a imunidade do Hacker Especialista
-        if (!temImunidade && lastRobbery && Date.now() - lastRobbery < cooldownTime) {
-            const faltam = Math.ceil((cooldownTime - (Date.now() - lastRobbery)) / 1000 / 60);
-            return message.reply(`# 🚓 A POLÍCIA TÁ NA SUA COLA!\n**Esconda-se por mais ${faltam} minuto(s) antes de tentar outro assalto!** 🏃💨`);
-        }
-
         // Busca os dados no Banco de Dados
         const robber = await prisma.user.findUnique({ where: { userId: message.author.id } });
         const victim = await prisma.user.findUnique({ where: { userId: targetUser.id } });
@@ -65,23 +55,42 @@ export default {
         const skills = typeof robber.skills === 'string' ? JSON.parse(robber.skills) : (robber.skills || {});
         const sorteLvl = skills.sorte || 1;
         const labiaLvl = skills.labia || 1;
+        const agilidadeLvl = skills.agilidade || 1;
+        const forcaLvl = skills.forca || 1;
+        const intimidacaoLvl = skills.intimidacao || 1;
 
         const bonusSorte = sorteLvl * 0.05; // Aumenta lucro em +5% por nível
         const bonusLabia = labiaLvl * 0.05; // Desconto na multa de 5% por nível
+        const bonusForca = forcaLvl * 0.07; // Aumenta roubo em +7% por nível
+        const bonusIntimidacao = intimidacaoLvl * 0.02; // +2% de chance de sucesso por nível
+
+        // --- SISTEMA DE COOLDOWN PADRÃO (5 MINUTOS) ---
+        // 💨 Agilidade reduz o tempo de espera em 4% por nível (mínimo de 1 minuto)
+        const cooldownTime = Math.max(60 * 1000, 5 * 60 * 1000 * (1 - agilidadeLvl * 0.04));
+        const lastRobbery = cooldowns.get(message.author.id);
+
+        // Só barra o cara se ele NÃO tiver a imunidade do Hacker Especialista
+        if (!temImunidade && lastRobbery && Date.now() - lastRobbery < cooldownTime) {
+            const faltam = Math.ceil((cooldownTime - (Date.now() - lastRobbery)) / 1000 / 60);
+            return message.reply(`# 🚓 A POLÍCIA TÁ NA SUA COLA!\n**Esconda-se por mais ${faltam} minuto(s) antes de tentar outro assalto!** 🏃💨`);
+        }
 
         // Atualiza o tempo do último roubo na memória
         cooldowns.set(message.author.id, Date.now());
 
         const successChance = Math.random(); 
+        const successThreshold = 0.45 + bonusIntimidacao; // 🕵️ Intimidação aumenta a chance de sucesso
         const msgImunidade = temImunidade ? `\n> 🥷 *Seu IP foi mascarado pelo Especialista! Nenhum tempo de espera foi gerado.*` : '';
 
-        // --- 1. SUCESSO (APLICA A SORTE) ---
-        if (successChance <= 0.45) {
+        // --- 1. SUCESSO (APLICA A SORTE E A FORÇA) ---
+        if (successChance <= successThreshold) {
             const percent = (Math.floor(Math.random() * 21) + 10) / 100; // Rouba entre 10% a 30%
             let baseStolen = Math.floor(victim.balance * percent);
             
             // Aumenta o valor roubado usando o nível de Sorte
             let finalStolen = Math.floor(baseStolen * (1 + bonusSorte));
+            // 💪 Força esmaga as defesas da vítima e aumenta ainda mais o saque
+            finalStolen = Math.floor(finalStolen * (1 + bonusForca));
             
             // Trava de Segurança: não deixa o valor roubado ser maior do que a vítima realmente tem
             finalStolen = Math.min(finalStolen, victim.balance);
@@ -91,7 +100,7 @@ export default {
 
             await prisma.transaction.create({ data: { fromUserId: victim.userId, toUserId: robber.userId, amount: finalStolen } });
 
-            return message.reply(`# 🥷 ASSALTO BEM SUCEDIDO!\n**Você encostou o ${targetUser.username} num beco e levou $${finalStolen.toLocaleString('pt-BR')} da carteira dele!**\n*Mete o pé antes que a viatura chegue!* 💰💨\n*🍀 A sua **Sorte (Nível ${sorteLvl})** garantiu +${(bonusSorte * 100).toFixed(0)}% a mais no montante do saque!*${msgImunidade}`);
+            return message.reply(`# 🥷 ASSALTO BEM SUCEDIDO!\n**Você encostou o ${targetUser.username} num beco e levou $${finalStolen.toLocaleString('pt-BR')} da carteira dele!**\n*Mete o pé antes que a viatura chegue!* 💰💨\n*🍀 A sua **Sorte (Nível ${sorteLvl})** garantiu +${(bonusSorte * 100).toFixed(0)}% a mais no montante do saque!*\n*💪 A sua **Força (Nível ${forcaLvl})** rendeu +${(bonusForca * 100).toFixed(0)}% no valor levado!*\n*🕵️ A sua **Intimidação (Nível ${intimidacaoLvl})** deixou a vítima paralisada de medo (+${(bonusIntimidacao * 100).toFixed(0)}% de chance de sucesso)!*${msgImunidade}`);
         
         // --- 2. FRACASSO E PRISÃO (APLICA A LÁBIA) ---
         } else {

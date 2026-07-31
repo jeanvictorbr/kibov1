@@ -15,10 +15,20 @@ export default {
             return message.reply('❌ Você é um desempregado, mano! Dá um pulo na agência com `k trabalhar` antes de querer meter a mão na massa.');
         }
 
+        // --- HABILIDADES (Sorte = mais lucro, Agilidade = menos cooldown, Inteligência = bônus hacker) ---
+        const skills = typeof userDb.skills === 'string' ? JSON.parse(userDb.skills) : (userDb.skills || {});
+        const sorteLvl = skills.sorte || 1;
+        const agilidadeLvl = skills.agilidade || 1;
+        const inteligenciaLvl = skills.inteligencia || 1;
+
+        const bonusSorte = sorteLvl * 0.05; // +5% de lucro por nível
+        const bonusAgilidade = agilidadeLvl * 0.04; // -4% de cooldown por nível
+        const bonusInteligencia = inteligenciaLvl * 0.07; // +7% de lucro hacker por nível
+
         // --- SISTEMA DE COOLDOWN (DEV = 0 / VIP = 5 min / Normal = 10 min) ---
         const isDev = userId === DEV_ID;
         const isVip = userDb.isPremium;
-        const cooldownMinutes = isVip ? 5 : 10; 
+        const cooldownMinutes = Math.max(1, Math.round((isVip ? 5 : 10) * (1 - bonusAgilidade)));
 
         if (!isDev) {
             const cooldownDb = await prisma.cooldown.findUnique({ where: { userId_command: { userId, command: 'executar' } } });
@@ -61,6 +71,14 @@ export default {
         const chance = Math.random() * 100;
         const lucro = Math.floor(Math.random() * (config.lucroMax - config.lucroMin + 1)) + config.lucroMin;
 
+        // 🍀 Sorte aumenta o lucro base em 5% por nível
+        let finalLucro = Math.floor(lucro * (1 + bonusSorte));
+
+        // 🧠 Inteligência turbina o trabalho de Hacker em 7% por nível
+        if (job === 'hacker') {
+            finalLucro = Math.floor(finalLucro * (1 + bonusInteligencia));
+        }
+
         // --- FALHA (Deu ruim no trampo) ---
         if (chance < config.risco) {
             const multa = Math.floor(lucro / 2); // Perde metade do que ganharia
@@ -97,40 +115,43 @@ export default {
         // --- SUCESSO (Trampo perfeito) ---
         await prisma.user.update({
             where: { userId },
-            data: { balance: { increment: lucro } }
+            data: { balance: { increment: finalLucro } }
         });
 
         let sucessoMsg = '';
         if (job === 'cidadao') {
             const frases = [
-                `👷 Bateu o ponto, truta! Um dia de trampo honesto que rendeu **$${lucro.toLocaleString('pt-BR')}** limpos.`,
-                `👷 Suou a camisa no canteiro de obras e o patrão liberou **$${lucro.toLocaleString('pt-BR')}** na sua mão.`,
-                `👷 Organizou o estoque da loja e foi pro abraço. Pagamento do dia: **$${lucro.toLocaleString('pt-BR')}**.`
+                `👷 Bateu o ponto, truta! Um dia de trampo honesto que rendeu **$${finalLucro.toLocaleString('pt-BR')}** limpos.`,
+                `👷 Suou a camisa no canteiro de obras e o patrão liberou **$${finalLucro.toLocaleString('pt-BR')}** na sua mão.`,
+                `👷 Organizou o estoque da loja e foi pro abraço. Pagamento do dia: **$${finalLucro.toLocaleString('pt-BR')}**.`
             ];
             sucessoMsg = frases[Math.floor(Math.random() * frases.length)];
         } else if (job === 'ladrao') {
             const frases = [
-                `🥷 Bote perfeito! Passou a mão no celular do boyzinho e vendeu no beco por **$${lucro.toLocaleString('pt-BR')}**.`,
-                `🥷 Mão leve demais! Limpou o caixa da farmácia e meteu o pé com **$${lucro.toLocaleString('pt-BR')}** no bolso.`,
-                `🥷 Desmanche rendeu! Trouxe as peças daquela moto e os caras te soltaram **$${lucro.toLocaleString('pt-BR')}**.`
+                `🥷 Bote perfeito! Passou a mão no celular do boyzinho e vendeu no beco por **$${finalLucro.toLocaleString('pt-BR')}**.`,
+                `🥷 Mão leve demais! Limpou o caixa da farmácia e meteu o pé com **$${finalLucro.toLocaleString('pt-BR')}** no bolso.`,
+                `🥷 Desmanche rendeu! Trouxe as peças daquela moto e os caras te soltaram **$${finalLucro.toLocaleString('pt-BR')}**.`
             ];
             sucessoMsg = frases[Math.floor(Math.random() * frases.length)];
         } else if (job === 'hacker') {
             const frases = [
-                `💻 Script rodou liso! Você drenou umas contas esquecidas e puxou **$${lucro.toLocaleString('pt-BR')}** em cripto.`,
-                `💻 Hackeou o banco de dados da prefeitura e vendeu as infos por **$${lucro.toLocaleString('pt-BR')}** na Deep Web.`,
-                `💻 Invasão concluída! Clonou uns cartões na gringa e sacou **$${lucro.toLocaleString('pt-BR')}**.`
+                `💻 Script rodou liso! Você drenou umas contas esquecidas e puxou **$${finalLucro.toLocaleString('pt-BR')}** em cripto.`,
+                `💻 Hackeou o banco de dados da prefeitura e vendeu as infos por **$${finalLucro.toLocaleString('pt-BR')}** na Deep Web.`,
+                `💻 Invasão concluída! Clonou uns cartões na gringa e sacou **$${finalLucro.toLocaleString('pt-BR')}**.`
             ];
             sucessoMsg = frases[Math.floor(Math.random() * frases.length)];
         } else if (job === 'policial') {
             const frases = [
-                `🚓 Patrulha tranquila! Manteve a quebrada em ordem e a prefeitura te pagou **$${lucro.toLocaleString('pt-BR')}**.`,
-                `🚓 Resolveu o B.O dos vizinhos encrenqueiros e assinou o relatório. Salário do dia: **$${lucro.toLocaleString('pt-BR')}**.`,
-                `🚓 Dia de ronda, aplicou umas multas e engordou a conta em **$${lucro.toLocaleString('pt-BR')}**.`
+                `🚓 Patrulha tranquila! Manteve a quebrada em ordem e a prefeitura te pagou **$${finalLucro.toLocaleString('pt-BR')}**.`,
+                `🚓 Resolveu o B.O dos vizinhos encrenqueiros e assinou o relatório. Salário do dia: **$${finalLucro.toLocaleString('pt-BR')}**.`,
+                `🚓 Dia de ronda, aplicou umas multas e engordou a conta em **$${finalLucro.toLocaleString('pt-BR')}**.`
             ];
             sucessoMsg = frases[Math.floor(Math.random() * frases.length)];
         }
 
-        return message.reply(`✅ **TRAMPO CONCLUÍDO!**\n\n${sucessoMsg}`);
+        let skillsMsg = `\n*🍀 A sua **Sorte (Nível ${sorteLvl})** garantiu +${(bonusSorte * 100).toFixed(0)}% no pagamento!*`;
+        if (job === 'hacker') skillsMsg += `\n*🧠 A sua **Inteligência (Nível ${inteligenciaLvl})** decifrou sistemas e rendeu +${(bonusInteligencia * 100).toFixed(0)}% extra!*`;
+
+        return message.reply(`✅ **TRAMPO CONCLUÍDO!**\n\n${sucessoMsg}${skillsMsg}`);
     }
 };

@@ -51,6 +51,9 @@ export default {
 
         // 4. Verifica se o ladrão tem a grana viva na mão
         const robberDb = await prisma.user.findUnique({ where: { userId: robberId } });
+        if (!robberDb) {
+            return message.reply('❌ Seu registro no submundo tá sumido do sistema! Dá um `k perfil` pra se registrar.');
+        }
         if (robberDb.balance < bribeAmount) {
             return message.reply(`❌ Você não tem **$${bribeAmount.toLocaleString('pt-BR')}** na carteira pra bancar esse suborno!`);
         }
@@ -80,59 +83,66 @@ export default {
         const collector = msg.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 60000 });
 
         collector.on('collect', async (i) => {
-            // TRAVA DE TEMPO: Avisa o Discord instantaneamente que estamos processando a resposta
-            await i.deferUpdate().catch(() => {});
+            try {
+                // TRAVA DE TEMPO: Avisa o Discord instantaneamente que estamos processando a resposta
+                await i.deferUpdate().catch(() => {});
 
-            // Segurança dupla: verifica se o cara ainda tá preso e se tem o dinheiro
-            const checkRobber = await prisma.user.findUnique({ where: { userId: robberId } });
-            const checkJail = await prisma.cooldown.findUnique({ where: { userId_command: { userId: robberId, command: 'preso' } } });
+                // Segurança dupla: verifica se o cara ainda tá preso e se tem o dinheiro
+                const checkRobber = await prisma.user.findUnique({ where: { userId: robberId } });
+                const checkJail = await prisma.cooldown.findUnique({ where: { userId_command: { userId: robberId, command: 'preso' } } });
 
-            if (!checkJail || checkJail.expiresAt < new Date()) {
-                await i.editReply({ content: '⏳ Tarde demais! O cara já fugiu ou a pena acabou.', embeds: [], components: [] });
-                return collector.stop();
+                if (!checkJail || checkJail.expiresAt < new Date()) {
+                    await i.editReply({ content: '⏳ Tarde demais! O cara já fugiu ou a pena acabou.', embeds: [], components: [] });
+                    return collector.stop();
+                }
+
+                if (!checkRobber || checkRobber.balance < bribeAmount) {
+                    await i.editReply({ content: '🤡 O vagabundo tentou dar o calote! Prometeu a grana mas a carteira tá vazia. Negócio cancelado!', embeds: [], components: [] });
+                    return collector.stop();
+                }
+
+                if (i.customId === 'aceitar_suborno') {
+                    // CORRUPÇÃO CONCLUÍDA
+                    await prisma.$transaction([
+                        prisma.user.update({ where: { userId: robberId }, data: { balance: { decrement: bribeAmount } } }),
+                        prisma.user.update({ where: { userId: targetUser.id }, data: { balance: { increment: bribeAmount } } }),
+                        prisma.cooldown.delete({ where: { userId_command: { userId: robberId, command: 'preso' } } }) // Apaga a pena!
+                    ]);
+
+                    const embedAceitou = new EmbedBuilder()
+                        .setTitle('🤝 NEGÓCIO FECHADO!')
+                        .setDescription(`O Oficial <@${targetUser.id}> olhou pros dois lados, guardou os **$${bribeAmount.toLocaleString('pt-BR')}** na bota e destrancou a porta.\n\n🔓 O <@${robberId}> tá solto na rua de novo! O sistema é sujo!`)
+                        .setColor('#00FF00');
+
+                    // Atualizado para editReply
+                    await i.editReply({ content: '💸 Fechou no sigilo.', embeds: [embedAceitou], components: [] });
+
+                } else if (i.customId === 'recusar_suborno') {
+                    // POLÍCIA RECUSOU (Sorteia punição de 2 a 8 minutos)
+                    const penaExtra = Math.floor(Math.random() * (8 - 2 + 1)) + 2;
+                    const novaPena = new Date(checkJail.expiresAt.getTime() + penaExtra * 60 * 1000);
+
+                    await prisma.cooldown.update({
+                        where: { userId_command: { userId: robberId, command: 'preso' } },
+                        data: { expiresAt: novaPena }
+                    });
+
+                    const embedRecusou = new EmbedBuilder()
+                        .setTitle('🛑 PM INCORRUPTÍVEL!')
+                        .setDescription(`O Oficial <@${targetUser.id}> deu risada da cara do <@${robberId}>, recusou a grana e bateu com o cacetete na grade!\n\n⚖️ **Punição:** O juiz sorteou mais **+${penaExtra} Minutos** na pena por tentativa de suborno!`)
+                        .setColor('#FF0000');
+
+                    // Atualizado para editReply
+                    await i.editReply({ content: '👮 A lei não tá à venda, chefe!', embeds: [embedRecusou], components: [] });
+                }
+
+                collector.stop();
+            } catch (error) {
+                // Qualquer erro aqui virava unhandled rejection e derrubava o bot inteiro
+                console.error(`[CRASH NO SUBORNO] Usuário ${i.user.id}:`, error);
+                await i.editReply({ content: '❌ Erro interno ao processar o desenrolo. Tenta de novo, chefe!', embeds: [], components: [] }).catch(() => {});
+                collector.stop();
             }
-
-            if (checkRobber.balance < bribeAmount) {
-                await i.editReply({ content: '🤡 O vagabundo tentou dar o calote! Prometeu a grana mas a carteira tá vazia. Negócio cancelado!', embeds: [], components: [] });
-                return collector.stop();
-            }
-
-            if (i.customId === 'aceitar_suborno') {
-                // CORRUPÇÃO CONCLUÍDA
-                await prisma.$transaction([
-                    prisma.user.update({ where: { userId: robberId }, data: { balance: { decrement: bribeAmount } } }),
-                    prisma.user.update({ where: { userId: targetUser.id }, data: { balance: { increment: bribeAmount } } }),
-                    prisma.cooldown.delete({ where: { userId_command: { userId: robberId, command: 'preso' } } }) // Apaga a pena!
-                ]);
-
-                const embedAceitou = new EmbedBuilder()
-                    .setTitle('🤝 NEGÓCIO FECHADO!')
-                    .setDescription(`O Oficial <@${targetUser.id}> olhou pros dois lados, guardou os **$${bribeAmount.toLocaleString('pt-BR')}** na bota e destrancou a porta.\n\n🔓 O <@${robberId}> tá solto na rua de novo! O sistema é sujo!`)
-                    .setColor('#00FF00');
-
-                // Atualizado para editReply
-                await i.editReply({ content: '💸 Fechou no sigilo.', embeds: [embedAceitou], components: [] });
-
-            } else if (i.customId === 'recusar_suborno') {
-                // POLÍCIA RECUSOU (Sorteia punição de 2 a 8 minutos)
-                const penaExtra = Math.floor(Math.random() * (8 - 2 + 1)) + 2;
-                const novaPena = new Date(checkJail.expiresAt.getTime() + penaExtra * 60 * 1000); 
-                
-                await prisma.cooldown.update({
-                    where: { userId_command: { userId: robberId, command: 'preso' } },
-                    data: { expiresAt: novaPena }
-                });
-
-                const embedRecusou = new EmbedBuilder()
-                    .setTitle('🛑 PM INCORRUPTÍVEL!')
-                    .setDescription(`O Oficial <@${targetUser.id}> deu risada da cara do <@${robberId}>, recusou a grana e bateu com o cacetete na grade!\n\n⚖️ **Punição:** O juiz sorteou mais **+${penaExtra} Minutos** na pena por tentativa de suborno!`)
-                    .setColor('#FF0000');
-
-                // Atualizado para editReply
-                await i.editReply({ content: '👮 A lei não tá à venda, chefe!', embeds: [embedRecusou], components: [] });
-            }
-
-            collector.stop();
         });
 
         collector.on('end', async (collected, reason) => {

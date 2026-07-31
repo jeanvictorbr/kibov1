@@ -15,7 +15,7 @@ model User {
   kiboCash      Float    @default(0)
   isPremium     Boolean  @default(false)
   vipExpiresAt  DateTime?
-  skills        Json     @default("{\"sorte\": 1, \"labia\": 1}")
+  skills        Json     @default("{\"sorte\": 1, \"labia\": 1, \"agilidade\": 1, \"inteligencia\": 1, \"forca\": 1, \"intimidacao\": 1}")
   badges        String[]
   isBanned      Boolean  @default(false)
   currentJob    String    @default("desempregado") // "onesto", "crime", "hacker"

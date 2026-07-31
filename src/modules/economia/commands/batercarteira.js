@@ -6,17 +6,14 @@ export default {
         const user = await prisma.user.findUnique({ where: { userId: message.author.id } });
         const chance = Math.random();
         const temPeDeCabra = await prisma.inventory.findFirst({
-    where: { userId: message.author.id, itemId: 'Pé de Cabra' }
-});
-
-if (temPeDeCabra) {
-    ganho = Math.floor(ganho * 1.5); // Aumenta o ganho em 50%
-}
+            where: { userId: message.author.id, itemId: 'Pé de Cabra' }
+        });
 
         if (chance > 0.6) {
             // SUCESSO
             let ganho = Math.floor(Math.random() * 2000) + 500;
             if (user?.isPremium) ganho = Math.floor(ganho * 2);
+            if (temPeDeCabra) ganho = Math.floor(ganho * 1.5); // Aumenta o ganho em 50%
 
             await prisma.user.update({ where: { userId: message.author.id }, data: { balance: { increment: ganho } } });
             return message.reply(`# 🥷 BATEU A CARTEIRA!\n**Você agiu rápido e tirou $${ganho.toLocaleString()} de um otário na rua.**`);
