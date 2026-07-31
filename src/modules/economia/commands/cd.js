@@ -12,7 +12,9 @@ export default {
             'executar', 'daily', 'mensal', 
             'int_abracar', 'int_socar', 
             'int_dancar', 'int_morder', 'int_chutar',
-            'operacao', 'contrabandear', 'sequestrar', 'revistar'
+            'operacao', 'contrabandear', 'sequestrar', 'revistar',
+            'farmar', 'desmanchar', 'caixinha', 'botnet', 'entregar',
+            'registradora', 'arrastao'
         ];
         
         // Busca apenas os cooldowns existentes no banco para este usuário

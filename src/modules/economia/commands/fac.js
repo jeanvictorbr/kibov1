@@ -33,6 +33,7 @@ export default {
             case 'doar': return donateFaction(message, rest, userId);
             case 'banco': return showBank(message, userId);
             case 'estoque': return showEstoque(message, userId);
+            case 'pegar': return takeItem(message, rest, userId);
             case 'vender': return sellItem(message, rest, userId);
             case 'mercado': return showMarket(message, guildId);
             case 'perfil': return showProfile(message, userId, guildId);
@@ -46,16 +47,16 @@ export default {
 async function sendHelp(message) {
     const embed = new EmbedBuilder()
         .setTitle('🏴 COMANDOS DE FACÇÃO')
-        .setDescription('Cria tua facção e domina o submundo da cidade!')
+        .setDescription('Cria tua facção e domina o submundo da cidade! Cada ramo tem sua missão, seus buffs e uma mercadoria exclusiva.')
         .setColor('#FF5555')
         .addFields(
             { name: '📦 Criação', value: '`k fac criar <nome>` - Funda uma facção e escolhe o ramo no menu!\nRamos: ' + FACTIONS_ORDER.map(r => `${FACTIONS[r].emoji} \`${r}\``).join(' '), inline: false },
-            { name: '👥 Membros', value: '`k fac convidar @user` / `k fac expulsar @user` / `k fac promover @user` / `k fac sair` / `k fac dissolver`', inline: false },
-            { name: '💰 Economia', value: '`k fac doar <valor>` / `k fac banco` / `k fac estoque`', inline: false },
-            { name: '🛒 Vendas', value: '`k fac vender <item> <qtd> <preco>` - Anuncia item da facção\n`k fac mercado` - Compra itens de outras facções', inline: false },
-            { name: '⚔️ Guerra', value: '`k fac guerra @membro [valor]` - Declara guerra (aposta sai do caixa, quem mais rouba vence e leva o pote!)\n`k fac guerra` - Ver o placar da guerra atual', inline: false },
-            { name: 'ℹ️ Info', value: '`k fac perfil` / `k fac top`', inline: false },
-            { name: '🎯 Missão', value: '`k operacao` - trabalha pelo ramo da sua facção, enche o caixa e produz itens', inline: false }
+            { name: '👥 Membros', value: '`k fac convidar @user` - Recruta (Líder/Capo)\n`k fac expulsar @user` - Manda rodar (Líder/Capo)\n`k fac promover @user` - Sobe pra Capo (só Líder)\n`k fac sair` / `k fac dissolver` - Vaza ou acaba com a fac\n\n👑 Líder manda em tudo. ⭐ Capo pode convidar/expulsar. 🔫 Membro só opera.', inline: false },
+            { name: '💰 Economia', value: '`k fac doar <valor>` - Bota grana no caixa\n`k fac banco` - Confere o caixa\n`k fac estoque` - Confere as mercadorias produzidas\n`k fac pegar <item> <qtd>` - Líder/Capo retira item do estoque pro próprio inventário (usa com `k usar`)', inline: false },
+            { name: '🛒 Vendas', value: '`k fac vender <item> <qtd> <preco>` - Anuncia item da fac no mercado\n`k fac mercado` - Compra itens de outras facções\n\n🧪 Os itens dão buffs: drogas (+lucro), armas (+chance de assalto), Conta de Lavagem (taxa cortada), Script de Invasão (+XP), Mapa de Rotas (+influência). Usa com `k usar`!', inline: false },
+            { name: '⚔️ Guerra', value: '`k fac guerra @membro [valor]` - Declara guerra contra a fac daquele mano (aposta mín. $20k, padrão $50k, sai do caixa)\n`k fac guerra` - Ver o placar e resolver guerras vencidas\n\nA guerra dura 60 minutos. Quem roubar membro da fac inimiga marca ponto (ataque/defesa). O vencedor leva o POTE (2x aposta) + 100 XP + 5 de influência!', inline: false },
+            { name: '🎯 Missão', value: '`k operacao` - Executa a missão do ramo: você lucra, enche o caixa da fac, ganha XP/Influência e produz a mercadoria exclusiva do ramo pro estoque.', inline: false },
+            { name: 'ℹ️ Info', value: '`k fac perfil` - Perfil da fac em imagem (com @user vê a fac de outra pessoa)\n`k fac top` - Ranking das facções da cidade', inline: false }
         );
     return message.reply({ embeds: [embed] });
 }
@@ -233,7 +234,47 @@ async function showEstoque(message, userId) {
         return `${item ? item.emoji + ' ' + item.name : itemId} × ${qtd}`;
     }).join('\n');
 
-    return message.reply(`📦 **Estoque da ${faction.name}** [${faction.tag}]:\n\n${text}\n\nAnuncie com \`k fac vender <item> <qtd> <preco>\``);
+    return message.reply(`📦 **Estoque da ${faction.name}** [${faction.tag}]:\n\n${text}\n\nLíder/Capo podem retirar com \`k fac pegar <item> <qtd>\` ou anunciar com \`k fac vender <item> <qtd> <preco>\``);
+}
+
+async function takeItem(message, rest, userId) {
+    const member = await getMemberOfUser(userId);
+    if (!member) return message.reply('❌ Você não é de nenhuma facção.');
+    if (member.rank === 'membro') return message.reply('❌ Só Líder e Capo podem retirar itens do estoque da facção.');
+
+    const itemId = (rest[0] || '').toLowerCase();
+    const numbers = rest.filter(a => typeof a === 'number');
+    const qtd = Math.floor(numbers[0] || 1);
+
+    if (!FACTION_ITEMS[itemId]) {
+        return message.reply(`❌ Item inválido! Os itens produzíveis são: ${Object.keys(FACTION_ITEMS).map(k => `\`${k}\``).join(' ')}`);
+    }
+    if (qtd <= 0) {
+        return message.reply('💡 Uso: `k fac pegar <item> <qtd>`\nEx: `k fac pegar droga_leve 2`');
+    }
+
+    const faction = await prisma.faction.findUnique({ where: { id: member.factionId } });
+    const estoque = readEstoque(faction);
+    if (!estoque[itemId] || estoque[itemId] < qtd) {
+        return message.reply(`❌ Sua facção não tem **${qtd}** desse item no estoque!`);
+    }
+
+    // Tira do estoque da fac e cai no inventário pessoal do líder/capo
+    await removeFromEstoque(member.factionId, itemId, qtd);
+
+    const item = FACTION_ITEMS[itemId];
+    const existingItem = await prisma.inventory.findFirst({
+        where: { userId, itemId: item.name }
+    });
+    if (existingItem) {
+        await prisma.inventory.update({ where: { id: existingItem.id }, data: { amount: { increment: qtd } } });
+    } else {
+        await prisma.inventory.create({
+            data: { userId, itemId: item.name, amount: qtd }
+        });
+    }
+
+    return message.reply(`🎒 **ITEM RETIRADO DO ESTOQUE!**\n${item.emoji} **${item.name}** × ${qtd} foi pro seu inventário.\nUsa com \`k usar\` pra ativar o buff — ${item.desc}`);
 }
 
 async function sellItem(message, rest, userId) {

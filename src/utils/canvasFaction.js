@@ -1,9 +1,12 @@
 import { createCanvas, loadImage } from 'canvas';
-import { FACTIONS } from './factionConfig.js';
 import { FACTION_ITEMS } from './factionItems.js';
 import { xpToNext, readEstoque } from './factionService.js';
 
-const RANK_EMOJI = { lider: '👑', capo: '⭐', membro: '🔫' };
+// Sem emojis no canvas: o Linux do servidor não tem fonte de emoji e renderiza
+// quadradinhos. Tudo vira desenho limpo (estrela, triângulo, chip, círculos).
+
+// Código de 2 letras por ramo pro emblema do cabeçalho
+const RAMO_CODES = { trafico: 'TC', armas: 'AR', lavagem: 'LV', hack: 'HK', transporte: 'TP' };
 
 function drawRoundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
@@ -17,6 +20,30 @@ function drawRoundRect(ctx, x, y, width, height, radius) {
     ctx.lineTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
+}
+
+function drawStar(ctx, cx, cy, spikes, outerR, innerR) {
+    let rot = -Math.PI / 2;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+        rot += step;
+        ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+        rot += step;
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawAlertTriangle(ctx, cx, cy, s) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s);
+    ctx.lineTo(cx - s * 0.86, cy + s * 0.7);
+    ctx.lineTo(cx + s * 0.86, cy + s * 0.7);
+    ctx.closePath();
+    ctx.fill();
 }
 
 // memberUsers: [{ user: DiscordUser, rank: 'lider'|'capo'|'membro' }] (líder primeiro)
@@ -64,8 +91,20 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
     ctx.shadowBlur = 0;
 
     // 3. CABEÇALHO DA FACÇÃO
-    ctx.font = '48px Arial';
-    ctx.fillText(config.emoji, 40, 88);
+    // Emblema do ramo (chip com código em vez de emoji)
+    const code = RAMO_CODES[faction.ramo] || 'FA';
+    const emX = 40, emY = 44, emS = 46;
+    drawRoundRect(ctx, emX, emY, emS, emS, 12);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.fill();
+    ctx.strokeStyle = theme; ctx.lineWidth = 2;
+    ctx.shadowColor = theme; ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = theme;
+    ctx.font = 'bold 18px Arial';
+    const codeW = ctx.measureText(code).width;
+    ctx.fillText(code, emX + (emS - codeW) / 2, emY + 30);
 
     ctx.fillStyle = theme;
     ctx.font = 'bold 20px Arial';
@@ -102,7 +141,7 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
     // Linha do ramo
     ctx.fillStyle = '#888899';
     ctx.font = 'italic 19px Arial';
-    ctx.fillText(`${config.emoji} ${config.name}`, 108, 146);
+    ctx.fillText(`RAMO: ${config.name}`, 108, 146);
 
     // 4. FAIXA DE GUERRA (opcional)
     if (warInfo) {
@@ -113,7 +152,8 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
         ctx.stroke();
         ctx.fillStyle = '#FF5555';
         ctx.font = 'bold 17px Arial';
-        ctx.fillText(`⚔️ EM GUERRA CONTRA ${warInfo.opponentName} [${warInfo.opponentTag}]  •  POTE $${warInfo.pot.toLocaleString('pt-BR')}  •  ${warInfo.score}`, 60, 192);
+        drawAlertTriangle(ctx, 66, 185, 9);
+        ctx.fillText(`EM GUERRA CONTRA ${warInfo.opponentName} [${warInfo.opponentTag}]  •  POTE $${warInfo.pot.toLocaleString('pt-BR')}  •  ${warInfo.score}`, 90, 192);
     }
 
     // 5. CARD DO LÍDER
@@ -140,8 +180,11 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
         ctx.restore();
     } catch (e) { console.error('Erro ao carregar avatar do líder no perfil de facção'); }
 
-    ctx.font = '24px Arial';
-    ctx.fillText('👑', 116, lcY + 34);
+    // Estrela dourada do líder (no lugar da coroa emoji)
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
+    drawStar(ctx, 126, lcY + 26, 5, 11, 4.5);
+    ctx.shadowBlur = 0;
     ctx.fillStyle = theme;
     ctx.font = 'bold 16px Arial';
     ctx.fillText('LÍDER', 148, lcY + 36);
@@ -217,14 +260,14 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
     ctx.stroke();
     ctx.fillStyle = theme;
     ctx.font = 'bold 20px Arial';
-    ctx.fillText('📦 ESTOQUE', 58, estY + 34);
+    ctx.fillText('ESTOQUE', 58, estY + 34);
 
     const estoque = readEstoque(faction);
     const itens = Object.entries(estoque).filter(([, q]) => q > 0);
     if (itens.length === 0) {
         ctx.fillStyle = '#666666';
         ctx.font = 'italic 18px Arial';
-        ctx.fillText('Vazio... Roda um `k operacao` que as mercadorias caem pra vocês.', 58, estY + 76);
+        ctx.fillText('Vazio... Roda um k operacao que as mercadorias caem pra vocês.', 58, estY + 76);
     } else {
         ctx.font = 'bold 17px Arial';
         itens.slice(0, 8).forEach(([id, q], i) => {
@@ -232,8 +275,11 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
             const row = Math.floor(i / 2);
             const x = 58 + col * 380, y = estY + 74 + row * 34;
             const item = FACTION_ITEMS[id];
+            // Bolinha decorativa no lugar do emoji do item
+            ctx.fillStyle = accent;
+            ctx.beginPath(); ctx.arc(x - 14, y - 6, 6, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#FFFFFF';
-            const label = item ? `${item.emoji} ${item.name} × ${q}` : `${id} × ${q}`;
+            const label = item ? `${item.name} × ${q}` : `${id} × ${q}`;
             ctx.fillText(label, x, y);
         });
     }
@@ -247,7 +293,7 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
     ctx.stroke();
     ctx.fillStyle = theme;
     ctx.font = 'bold 20px Arial';
-    ctx.fillText('👥 MEMBROS', 58, memY + 30);
+    ctx.fillText('MEMBROS', 58, memY + 30);
 
     const maxShow = 8;
     const shown = memberUsers.slice(0, maxShow);
@@ -263,12 +309,23 @@ export async function generateFactionCanvas(faction, config, leaderUser, memberU
             ctx.drawImage(av, x - r2, cy - r2, r2 * 2, r2 * 2);
             ctx.restore();
         } catch (e) { /* sem avatar = círculo vazio */ }
+        // Anel colorido indica o rank (sem emoji)
+        const rank = shown[i].rank;
         ctx.beginPath(); ctx.arc(x, cy, r2 + 2, 0, Math.PI * 2, true);
-        ctx.strokeStyle = shown[i].rank === 'lider' ? theme : '#333333';
+        ctx.strokeStyle = rank === 'lider' ? '#FFD700' : (rank === 'capo' ? theme : '#3a3f4b');
         ctx.lineWidth = 3;
         ctx.stroke();
-        ctx.font = '16px Arial';
-        ctx.fillText(RANK_EMOJI[shown[i].rank] || '🔫', x + r2 - 10, cy - r2 + 2);
+        if (rank === 'lider') {
+            // Estrela dourada no canto do avatar do líder
+            ctx.fillStyle = '#FFD700';
+            ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 6;
+            drawStar(ctx, x + r2 - 11, cy - r2 + 7, 5, 8, 3.4);
+            ctx.shadowBlur = 0;
+        } else if (rank === 'capo') {
+            // Pontinho claro no canto do capo
+            ctx.fillStyle = accent;
+            ctx.beginPath(); ctx.arc(x + r2 - 8, cy - r2 + 8, 4, 0, Math.PI * 2); ctx.fill();
+        }
         ctx.fillStyle = '#CCCCCC';
         ctx.font = 'bold 13px Arial';
         let nm = shown[i].user.username || '?';
