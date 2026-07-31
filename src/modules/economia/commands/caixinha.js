@@ -52,8 +52,8 @@ export default {
             });
         }
 
-        // Lucro base 1.2k-3k, escalado por Lábia e nível da fac
-        let lucro = Math.floor(Math.random() * (3000 - 1200 + 1)) + 1200;
+        // Lucro base 4k-6.5k, escalado por Lábia e nível da fac
+        let lucro = Math.floor(Math.random() * (6500 - 4000 + 1)) + 4000;
         lucro = Math.floor(lucro * (1 + labiaLvl * 0.05));
         lucro = Math.floor(lucro * (1 + levelBonus(faction.nivel)));
         const buffEffects = await getActiveBuffEffects(userId);

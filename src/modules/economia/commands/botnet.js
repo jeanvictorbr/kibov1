@@ -53,8 +53,8 @@ export default {
             });
         }
 
-        // Lucro base 2.5k-4.5k, escalado por Inteligência e nível da fac
-        let lucro = Math.floor(Math.random() * (4500 - 2500 + 1)) + 2500;
+        // Lucro base 5.5k-9k, escalado por Inteligência e nível da fac
+        let lucro = Math.floor(Math.random() * (9000 - 5500 + 1)) + 5500;
         lucro = Math.floor(lucro * (1 + inteligenciaLvl * 0.07));
         lucro = Math.floor(lucro * (1 + levelBonus(faction.nivel)));
         const buffEffects = await getActiveBuffEffects(userId);

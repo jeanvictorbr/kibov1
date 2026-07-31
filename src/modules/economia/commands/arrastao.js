@@ -52,8 +52,8 @@ export default {
             });
         }
 
-        // Lucro base 10k-20k, escalado por Sorte e Força
-        let lucro = Math.floor(Math.random() * (20000 - 10000 + 1)) + 10000;
+        // Lucro base 18k-30k, escalado por Sorte e Força
+        let lucro = Math.floor(Math.random() * (30000 - 18000 + 1)) + 18000;
         lucro = Math.floor(lucro * (1 + sorteLvl * 0.05));
         lucro = Math.floor(lucro * (1 + forcaLvl * 0.05));
 

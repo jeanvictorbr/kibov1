@@ -52,8 +52,8 @@ export default {
             });
         }
 
-        // Lucro base 1.5k-3.5k, escalado por Sorte e nível da fac
-        let lucro = Math.floor(Math.random() * (3500 - 1500 + 1)) + 1500;
+        // Lucro base 4k-7k, escalado por Sorte e nível da fac
+        let lucro = Math.floor(Math.random() * (7000 - 4000 + 1)) + 4000;
         lucro = Math.floor(lucro * (1 + sorteLvl * 0.05));
         lucro = Math.floor(lucro * (1 + levelBonus(faction.nivel)));
         const buffEffects = await getActiveBuffEffects(userId);

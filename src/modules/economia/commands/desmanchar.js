@@ -52,8 +52,8 @@ export default {
             });
         }
 
-        // Lucro base 2k-4k, escalado por Força e nível da fac
-        let lucro = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
+        // Lucro base 5k-8k, escalado por Força e nível da fac
+        let lucro = Math.floor(Math.random() * (8000 - 5000 + 1)) + 5000;
         lucro = Math.floor(lucro * (1 + forcaLvl * 0.05));
         lucro = Math.floor(lucro * (1 + levelBonus(faction.nivel)));
         const buffEffects = await getActiveBuffEffects(userId);

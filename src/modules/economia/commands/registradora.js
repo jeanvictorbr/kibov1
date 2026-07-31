@@ -51,8 +51,8 @@ export default {
             });
         }
 
-        // Lucro base 6k-12k, escalado por Sorte
-        let lucro = Math.floor(Math.random() * (12000 - 6000 + 1)) + 6000;
+        // Lucro base 12k-20k, escalado por Sorte
+        let lucro = Math.floor(Math.random() * (20000 - 12000 + 1)) + 12000;
         lucro = Math.floor(lucro * (1 + sorteLvl * 0.05));
 
         // Buffs de facção e de item
