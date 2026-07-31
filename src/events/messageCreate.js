@@ -19,9 +19,36 @@ export default {
 
         const commandName = match[1].toLowerCase();
         const argsRaw = match[2].trim();
-        const args = argsRaw ? argsRaw.split(/ +/) : [];
+        let args = argsRaw ? argsRaw.split(/ +/) : [];
 
-        const command = client.commands.get(commandName);
+        let command = client.commands.get(commandName);
+
+        // 🔎 RESOLUÇÃO INTELIGENTE:
+        // 1º procura pelo nome exato (k perfil)
+        // 2º procura por alias registrado (k help, k cc, k ctop, k vc)
+        // 3º aceita comando "colado" com subcomando: kfaccriar -> k fac criar
+        if (!command) {
+            for (const cmd of client.commands.values()) {
+                if (cmd.aliases && cmd.aliases.includes(commandName)) {
+                    command = cmd;
+                    break;
+                }
+            }
+        }
+
+        if (!command) {
+            let bestName = '';
+            for (const [name, cmd] of client.commands) {
+                if (name.length >= 2 && name.length > bestName.length && commandName.startsWith(name)) {
+                    command = cmd;
+                    bestName = name;
+                }
+            }
+            if (command && bestName) {
+                args.unshift(commandName.slice(bestName.length));
+            }
+        }
+
         if (!command) return;
 
         // SISTEMA DE SEGURANÇA INTERNA: Checagem de Banimento Global

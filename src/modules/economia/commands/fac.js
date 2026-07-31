@@ -83,6 +83,9 @@ async function createFaction(message, rest, userId, guildId) {
     // Guarda o nome pendente e mostra o seletor de ramo
     pendingCreation.set(userId, { name, guildId, timestamp: Date.now() });
 
+    // Descrição curta do ramo (limite do Discord: 100 caracteres)
+    const shortDesc = (s) => (s.length <= 100 ? s : s.slice(0, 97) + '...');
+
     const row = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId(`fac_create_ramo_${userId}`)
@@ -91,7 +94,7 @@ async function createFaction(message, rest, userId, guildId) {
                 FACTIONS_ORDER.map(r => ({
                     label: FACTIONS[r].name,
                     value: r,
-                    description: FACTIONS[r].desc,
+                    description: shortDesc(FACTIONS[r].desc),
                     emoji: FACTIONS[r].emoji
                 }))
             )
@@ -285,10 +288,11 @@ async function showMarket(message, guildId) {
                 listings.slice(0, 25).map(l => {
                     const item = FACTION_ITEMS[l.itemId];
                     const total = l.price * l.qty;
+                    const desc = `${l.faction.name} | R$${total.toLocaleString('pt-BR')} ($${l.price.toLocaleString('pt-BR')}/un)`;
                     return {
                         label: `${item.emoji} ${item.name} × ${l.qty}`,
                         value: l.id,
-                        description: `${l.faction.name} | R$${total.toLocaleString('pt-BR')} ($${l.price.toLocaleString('pt-BR')}/un)`
+                        description: desc.length <= 100 ? desc : desc.slice(0, 97) + '...'
                     };
                 })
             )
